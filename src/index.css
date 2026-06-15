@@ -92,3 +92,11 @@ body { overflow-x: hidden; }
 
 /* Page transitions */
 .page-wrap { will-change: clip-path, opacity; }
+
+/* Issue #10: hide custom cursor on touch devices */
+@media (pointer: coarse) {
+  #cursor, #cursor-ring { display: none !important; }
+}
+
+/* Performance: promote canvas layers */
+canvas { transform: translateZ(0); }

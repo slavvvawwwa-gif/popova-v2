@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { I18nextProvider } from "react-i18next";
@@ -13,22 +13,27 @@ import Contacts from "@/pages/Contacts";
 import WorkDetail from "@/pages/WorkDetail";
 import ShaderBackground from "@/components/ShaderBackground";
 import Grain from "@/components/ui/Grain";
+import { getSiteTheme } from "@/lib/data";
 
-// Theatre curtain: page scales up from below with a clip reveal
+/* Issue #12: apply CSS variables from Sanity hue setting */
+function applyTheme(hue: number) {
+  const root = document.documentElement;
+  const t = `hsl(${hue}`;
+  const s = (l: string, sat: string) => `${t},${sat},${l})`;
+  root.style.setProperty("--bg",       s("3.5%",  "28%"));
+  root.style.setProperty("--surface",  s("5.5%",  "18%"));
+  root.style.setProperty("--accent",   s("52%",   "68%"));
+  root.style.setProperty("--accent-2", `hsl(${hue + 22},50%,40%)`);
+  const tw = Math.round(hue * 0.08 + 26);
+  root.style.setProperty("--text-1",   `hsl(${tw},38%,94%)`);
+  root.style.setProperty("--text-2",   `hsla(${tw},28%,90%,0.50)`);
+  root.style.setProperty("--text-3",   `hsla(${tw},20%,86%,0.22)`);
+}
+
 const pageVariants = {
-  initial: {
-    opacity: 0,
-    clipPath: "inset(0 0 100% 0)",
-  },
-  enter: {
-    opacity: 1,
-    clipPath: "inset(0 0 0% 0)",
-    transition: { duration: 0.75, ease: [0.76, 0, 0.24, 1] },
-  },
-  exit: {
-    opacity: 0,
-    transition: { duration: 0.22 },
-  },
+  initial: { opacity: 0, clipPath: "inset(0 0 100% 0)" },
+  enter:   { opacity: 1, clipPath: "inset(0 0 0% 0)",   transition: { duration: 0.72, ease: [0.76, 0, 0.24, 1] } },
+  exit:    { opacity: 0,                                 transition: { duration: 0.20 } },
 } as const;
 
 function AnimatedRoutes({ locale }: { locale: string }) {
@@ -44,15 +49,15 @@ function AnimatedRoutes({ locale }: { locale: string }) {
         className="page-wrap"
       >
         <Routes location={location}>
-          <Route path="/"               element={<Home locale={locale}/>}/>
-          <Route path="/about"          element={<About locale={locale}/>}/>
-          <Route path="/works"          element={<Works locale={locale} kind="performance"/>}/>
-          <Route path="/works/:slug"    element={<WorkDetail locale={locale} basePath="/works"/>}/>
-          <Route path="/projects"       element={<Works locale={locale} kind="project"/>}/>
-          <Route path="/projects/:slug" element={<WorkDetail locale={locale} basePath="/projects"/>}/>
-          <Route path="/lab"            element={<Works locale={locale} kind="lab"/>}/>
-          <Route path="/lab/:slug"      element={<WorkDetail locale={locale} basePath="/lab"/>}/>
-          <Route path="/contacts"       element={<Contacts/>}/>
+          <Route path="/"               element={<Home locale={locale} />} />
+          <Route path="/about"          element={<About locale={locale} />} />
+          <Route path="/works"          element={<Works locale={locale} kind="performance" />} />
+          <Route path="/works/:slug"    element={<WorkDetail locale={locale} basePath="/works" />} />
+          <Route path="/projects"       element={<Works locale={locale} kind="project" />} />
+          <Route path="/projects/:slug" element={<WorkDetail locale={locale} basePath="/projects" />} />
+          <Route path="/lab"            element={<Works locale={locale} kind="lab" />} />
+          <Route path="/lab/:slug"      element={<WorkDetail locale={locale} basePath="/lab" />} />
+          <Route path="/contacts"       element={<Contacts />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -64,43 +69,47 @@ function AppInner() {
   useLenis();
   useCursor();
 
+  // Issue #12: load Sanity theme on mount
+  useEffect(() => {
+    getSiteTheme().then(t => { if (t) applyTheme(t.hue); });
+  }, []);
+
   const handleLocale = (l: string) => { setLocale(l); i18n.changeLanguage(l); };
 
   return (
     <>
       {/* Global WebGL shader — fixed, every page */}
-      <div style={{ position:"fixed", inset:0, zIndex:0, pointerEvents:"none" }}>
-        <ShaderBackground/>
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
+        <ShaderBackground />
       </div>
 
-      {/* Film grain */}
-      <Grain/>
+      {/* Film grain — z:0 so it overlays shader but NOT content (z:1) */}
+      <Grain />
 
-      {/* Custom cursor dots */}
-      <div id="cursor"/>
-      <div id="cursor-ring"/>
+      {/* Custom cursor (hidden on touch via CSS) */}
+      <div id="cursor" />
+      <div id="cursor-ring" />
 
-      <Nav locale={locale} setLocale={handleLocale}/>
+      <Nav locale={locale} setLocale={handleLocale} />
 
-      <main style={{ position:"relative", zIndex:1 }}>
+      <main style={{ position: "relative", zIndex: 1 }}>
         <Suspense fallback={null}>
-          <AnimatedRoutes locale={locale}/>
+          <AnimatedRoutes locale={locale} />
         </Suspense>
       </main>
 
       <footer style={{
-        position:"relative", zIndex:1,
-        padding:"3.5rem clamp(1.5rem,3vw,2.5rem)",
-        borderTop:"1px solid rgba(245,240,229,0.045)",
-        display:"flex", justifyContent:"space-between", alignItems:"center",
-        flexWrap:"wrap", gap:"1rem",
+        position: "relative", zIndex: 1,
+        padding: "3rem clamp(1.5rem,3vw,2.5rem)",
+        borderTop: "1px solid rgba(245,240,229,0.04)",
+        display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem",
       }}>
-        <span style={{ color:"var(--text-3)", fontSize:"0.6rem", letterSpacing:"0.12em", fontFamily:"var(--serif)", fontStyle:"italic" }}>
+        <span style={{ color: "var(--text-3)", fontSize: "0.6rem", letterSpacing: "0.12em", fontFamily: "var(--serif)", fontStyle: "italic" }}>
           Варвара Попова
         </span>
-        <div style={{ display:"flex", gap:"0.4rem", alignItems:"center" }}>
-          <div style={{ width:1, height:12, background:"var(--accent)", opacity:0.4 }}/>
-          <span style={{ color:"var(--text-3)", fontSize:"0.55rem", letterSpacing:"0.14em" }}>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <div style={{ width: 1, height: 12, background: "var(--accent)", opacity: 0.35 }} />
+          <span style={{ color: "var(--text-3)", fontSize: "0.55rem", letterSpacing: "0.14em" }}>
             © {new Date().getFullYear()}
           </span>
         </div>
@@ -113,7 +122,7 @@ export default function App() {
   return (
     <I18nextProvider i18n={i18n}>
       <BrowserRouter>
-        <AppInner/>
+        <AppInner />
       </BrowserRouter>
     </I18nextProvider>
   );

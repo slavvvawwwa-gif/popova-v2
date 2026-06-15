@@ -50,9 +50,10 @@ function mapGallery(arr: unknown, locale: Locale): GalleryImg[] {
   }));
 }
 
+// Issue #2: sort featured by year desc
 export async function getFeatured(locale: Locale = "ru"): Promise<WorkCard[]> {
   const rows = await client.fetch<Record<string,unknown>[]>(
-    `*[_type=="performance"&&featured==true&&!defined(parent)]{${CARD}}`
+    `*[_type=="performance"&&featured==true&&!defined(parent)]|order(year desc, _createdAt desc){${CARD}}`
   );
   return rows.map(r => mapCard(r, locale));
 }
@@ -139,23 +140,32 @@ export interface BioData {
   text: unknown[]|null;
   festivals: { period:string; description:string }[];
   education: { period:string; description:string }[];
+  thankYouLetters: { period:string; description:string; from:string }[];
   cvRu: string|null; cvEn: string|null;
 }
 
 export async function getBio(locale: Locale = "ru"): Promise<BioData|null> {
   const r = await client.fetch<Record<string,unknown>|null>(
-    `*[_type=="bio"][0]{name_ru,name_en,role_ru,role_en,photo,gallery[]{asset,alt},bio_text_ru,bio_text_en,festivals[]{period,description_ru,description_en},education[]{period,description_ru,description_en},"cvRu":cv_file_ru.asset->url,"cvEn":cv_file_en.asset->url}`
+    `*[_type=="bio"][0]{name_ru,name_en,role_ru,role_en,photo,gallery[]{asset,alt},bio_text_ru,bio_text_en,festivals[]{period,description_ru,description_en},education[]{period,description_ru,description_en},thank_you_letters[]{period,description_ru,description_en,from_ru,from_en},"cvRu":cv_file_ru.asset->url,"cvEn":cv_file_en.asset->url}`
   );
   if (!r) return null;
-  const mapP = (arr: unknown) => asArr<Record<string,unknown>>(arr).map(e => ({ period: (e.period as string) ?? "", description: pick(e, "description", locale) }));
+  const mapP = (arr: unknown) =>
+    asArr<Record<string,unknown>>(arr).map(e => ({ period: (e.period as string) ?? "", description: pick(e, "description", locale) }));
+  const mapL = (arr: unknown) =>
+    asArr<Record<string,unknown>>(arr).map(e => ({
+      period:      (e.period as string) ?? "",
+      description: pick(e, "description", locale),
+      from:        pick(e, "from", locale),
+    }));
   return {
     name: pick(r,"name",locale),
     role: pick(r,"role",locale),
     photoUrl: urlFor(r.photo)?.width(1100).quality(90).url() ?? null,
     gallery: asArr<Record<string,unknown>>(r.gallery).map(g => ({ url: urlFor(g)?.width(1600).quality(88).url() ?? null, alt: (g.alt as string) ?? "" })),
     text: locale==="en" ? (r.bio_text_en as unknown[]|null) ?? (r.bio_text_ru as unknown[]|null) : (r.bio_text_ru as unknown[]|null),
-    festivals: mapP(r.festivals),
-    education: mapP(r.education),
+    festivals:       mapP(r.festivals),
+    education:       mapP(r.education),
+    thankYouLetters: mapL(r.thank_you_letters),
     cvRu: (r.cvRu as string) ?? null,
     cvEn: (r.cvEn as string) ?? null,
   };
@@ -165,4 +175,12 @@ export async function getContacts() {
   return client.fetch<{email:string;social_links:{platform:string;url:string;handle:string}[]}|null>(
     `*[_type=="contacts"][0]{email,social_links[]{platform,url,handle}}`
   );
+}
+
+// Issue #12: site-wide theme from Sanity (hue 0-360)
+export async function getSiteTheme(): Promise<{hue:number}|null> {
+  return client
+    .fetch<{themeHue:number}|null>(`*[_type=="siteSettings"][0]{themeHue}`)
+    .then(r => (r?.themeHue != null ? { hue: r.themeHue } : null))
+    .catch(() => null);
 }
