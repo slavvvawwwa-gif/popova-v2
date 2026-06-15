@@ -15,7 +15,6 @@ import ShaderBackground from "@/components/ShaderBackground";
 import Grain from "@/components/ui/Grain";
 import { getSiteTheme } from "@/lib/data";
 
-/* Issue #12: apply CSS variables from Sanity hue setting */
 function applyTheme(hue: number) {
   const root = document.documentElement;
   const t = `hsl(${hue}`;
@@ -64,31 +63,71 @@ function AnimatedRoutes({ locale }: { locale: string }) {
   );
 }
 
+/* ── Global click fog splashes ── */
+let splashId = 0;
+type Splash = { id: number; x: number; y: number };
+
 function AppInner() {
-  const [locale, setLocale] = useState("ru");
+  const [locale, setLocale]   = useState("ru");
+  const [splashes, setSplashes] = useState<Splash[]>([]);
   useLenis();
   useCursor();
 
-  // Issue #12: load Sanity theme on mount
   useEffect(() => {
     getSiteTheme().then(t => { if (t) applyTheme(t.hue); });
   }, []);
 
+  // Global background click fog — fires on any non-interactive element
+  const handleGlobalClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLElement;
+    if (el.closest("a, button, input, textarea, select, [role=button]")) return;
+    const id = ++splashId;
+    setSplashes(s => [...s, { id, x: e.clientX, y: e.clientY }]);
+    setTimeout(() => setSplashes(s => s.filter(sp => sp.id !== id)), 1400);
+  };
+
   const handleLocale = (l: string) => { setLocale(l); i18n.changeLanguage(l); };
 
   return (
-    <>
+    <div onClick={handleGlobalClick} style={{ minHeight: "100svh" }}>
       {/* Global WebGL shader — fixed, every page */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
         <ShaderBackground />
       </div>
 
-      {/* Film grain — z:0 so it overlays shader but NOT content (z:1) */}
+      {/* Fixed bottom-of-viewport gradient — fades shader into bg on scroll */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "28vh", background: "linear-gradient(to bottom, transparent, var(--bg))", pointerEvents: "none", zIndex: 2 }} />
+
+      {/* Film grain */}
       <Grain />
 
-      {/* Custom cursor (hidden on touch via CSS) */}
+      {/* Custom cursor */}
       <div id="cursor" />
       <div id="cursor-ring" />
+
+      {/* Global splash container — fixed so position follows viewport */}
+      <AnimatePresence>
+        {splashes.map(sp => (
+          <motion.div
+            key={sp.id}
+            initial={{ opacity: 0.45, scale: 0 }}
+            animate={{ opacity: 0, scale: 4.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: "fixed",
+              left: sp.x, top: sp.y,
+              width: 220, height: 220,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(212,175,55,0.35) 0%, rgba(184,115,51,0.12) 45%, transparent 70%)",
+              transform: "translate(-50%, -50%)",
+              pointerEvents: "none",
+              zIndex: 9999,
+              filter: "blur(18px)",
+            }}
+          />
+        ))}
+      </AnimatePresence>
 
       <Nav locale={locale} setLocale={handleLocale} />
 
@@ -100,7 +139,7 @@ function AppInner() {
 
       <footer style={{
         position: "relative", zIndex: 1,
-        padding: "3rem clamp(1.5rem,3vw,2.5rem)",
+        padding: "2.5rem clamp(1.5rem,3vw,2.5rem)",
         borderTop: "1px solid rgba(245,240,229,0.04)",
         display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem",
       }}>
@@ -114,7 +153,7 @@ function AppInner() {
           </span>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
 

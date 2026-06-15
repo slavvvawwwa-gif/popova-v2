@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import { getPerformances, type WorkCard } from "@/lib/data";
 
 const YEAR_WIN = 5;
 
-/* ── Bento sizes for current-repertoire grid — mirrors Home Featured ── */
 const BENTO = [
   { cols: 2, rows: 2 },
   { cols: 1, rows: 2 },
@@ -15,44 +14,51 @@ const BENTO = [
 ];
 const bentoFor = (i: number) => BENTO[i % 5];
 
-/* ── Issue #4: reduced floating preview size ── */
-function FloatingPreview({ url, visible }: { url: string | null; visible: boolean }) {
-  const mx = useMotionValue(-9999);
-  const my = useMotionValue(-9999);
-  const sx = useSpring(mx, { stiffness: 200, damping: 26 });
-  const sy = useSpring(my, { stiffness: 200, damping: 26 });
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => { mx.set(e.clientX); my.set(e.clientY); };
-    window.addEventListener("mousemove", h);
-    return () => window.removeEventListener("mousemove", h);
-  }, [mx, my]);
-
+/* ── Click-based floating preview — shows on first click, position fixed near cursor ── */
+function ClickPreview({ url, x, y, visible }: { url: string | null; x: number; y: number; visible: boolean }) {
   return (
-    <motion.div
-      animate={{ opacity: visible ? 1 : 0, scale: visible ? 1 : 0.84 }}
-      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-      style={{
-        position: "fixed", left: 0, top: 0, zIndex: 100,
-        width: 200, height: 260,
-        x: sx, y: sy,
-        translateX: "2rem", translateY: "-55%",
-        pointerEvents: "none", overflow: "hidden",
-      }}
-    >
-      {url && <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
-      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 2, background: "linear-gradient(to bottom, var(--accent), transparent)" }} />
-    </motion.div>
+    <AnimatePresence>
+      {visible && url && (
+        <motion.div
+          key={url + x + y}
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.88 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            position: "fixed",
+            left: x + 24, top: y,
+            zIndex: 100,
+            width: 180, height: 240,
+            translateY: "-50%",
+            pointerEvents: "none", overflow: "hidden",
+          }}
+        >
+          <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 2, background: "linear-gradient(to bottom, var(--accent), transparent)" }} />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
-/* ── Archive row — Issue #4: dimmer gold, smoother underline ── */
-function ArchiveRow({ w, basePath, onHover, onLeave, index }: {
-  w: WorkCard; basePath: string;
-  onHover: (url: string | null) => void;
-  onLeave: () => void;
-  index: number;
+/* ── Archive row — first click = preview, second click = navigate ── */
+function ArchiveRow({ w, basePath, index, activeSlug, onFirstClick }: {
+  w: WorkCard; basePath: string; index: number;
+  activeSlug: string | null;
+  onFirstClick: (slug: string, url: string | null, x: number, y: number) => void;
 }) {
+  const navigate  = useNavigate();
+  const isActive  = activeSlug === w.slug;
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isActive) {
+      navigate(`${basePath}/${w.slug}`);
+    } else {
+      onFirstClick(w.slug, w.previewUrl ?? w.coverUrl, e.clientX, e.clientY);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -24 }}
@@ -60,27 +66,24 @@ function ArchiveRow({ w, basePath, onHover, onLeave, index }: {
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.55, delay: index * 0.03, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Link
-        to={`${basePath}/${w.slug}`}
-        style={{ textDecoration: "none", display: "block", position: "relative" }}
-        onMouseEnter={() => onHover(w.previewUrl ?? w.coverUrl)}
-        onMouseLeave={onLeave}
+      <div
+        onClick={handleClick}
         className="arc-row"
+        style={{ textDecoration: "none", display: "block", position: "relative", cursor: "pointer" }}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "1rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)" }}>
           <span style={{ fontFamily: "var(--serif)", fontSize: "0.82rem", color: "var(--text-3)", fontVariantNumeric: "tabular-nums" }}>
             {w.year}
           </span>
-          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: "var(--text-1)", lineHeight: 1.1, transition: "letter-spacing 600ms var(--ease-soft), color 400ms" }}>
+          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: isActive ? "rgba(212,175,55,0.8)" : "var(--text-1)", lineHeight: 1.1, transition: "color 400ms" }}>
             {w.title}
           </span>
           <span style={{ fontSize: "0.6rem", color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
             {w.theatre}
           </span>
         </div>
-        {/* Subtle dimmed gold sweep — smoother timing */}
-        <div className="arc-line" style={{ position: "absolute", bottom: 0, left: 0, height: 1, width: 0, background: "rgba(212,175,55,0.45)", transition: "width 550ms var(--ease-soft)" }} />
-      </Link>
+        <div className="arc-line" style={{ position: "absolute", bottom: 0, left: 0, height: 1, width: isActive ? "100%" : "0%", background: "rgba(212,175,55,0.45)", transition: "width 550ms var(--ease-soft)" }} />
+      </div>
     </motion.div>
   );
 }
@@ -160,13 +163,34 @@ export default function Works({ locale, kind = "performance" }: { locale: string
   const [works, setWorks]           = useState<WorkCard[]>([]);
   const [activeYear, setActiveYear] = useState<number | null>(null);
   const [page, setPage]             = useState(0);
-  const [hoverUrl, setHoverUrl]     = useState<string | null>(null);
-  const [previewOn, setPreviewOn]   = useState(false);
+  // Archive click state: which row is "first-clicked" + preview position
+  const [activeSlug,    setActiveSlug]    = useState<string | null>(null);
+  const [previewUrl,    setPreviewUrl]    = useState<string | null>(null);
+  const [previewPos,    setPreviewPos]    = useState<{ x: number; y: number }>({ x: -999, y: -999 });
+  const [previewVisible, setPreviewVisible] = useState(false);
 
   useEffect(() => {
     getPerformances(locale as "ru" | "en", kind).then(setWorks);
-    setActiveYear(null); setPage(0);
+    setActiveYear(null); setPage(0); setActiveSlug(null); setPreviewVisible(false);
   }, [locale, kind]);
+
+  // Clicking elsewhere closes preview
+  useEffect(() => {
+    const dismiss = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".arc-row")) {
+        setActiveSlug(null); setPreviewVisible(false);
+      }
+    };
+    document.addEventListener("click", dismiss);
+    return () => document.removeEventListener("click", dismiss);
+  }, []);
+
+  const handleFirstClick = (slug: string, url: string | null, x: number, y: number) => {
+    setActiveSlug(slug);
+    setPreviewUrl(url);
+    setPreviewPos({ x, y });
+    setPreviewVisible(true);
+  };
 
   const years   = [...new Set(works.map(w => w.year).filter((y): y is number => y != null))].sort((a, b) => b - a);
   const visible  = years.slice(page * YEAR_WIN, page * YEAR_WIN + YEAR_WIN);
@@ -178,18 +202,17 @@ export default function Works({ locale, kind = "performance" }: { locale: string
 
   return (
     <>
-      <FloatingPreview url={hoverUrl} visible={previewOn} />
+      <ClickPreview url={previewUrl} x={previewPos.x} y={previewPos.y} visible={previewVisible} />
 
-      {/* Issue #7: reduced padding */}
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "6rem clamp(1.5rem,3vw,2.5rem) 4rem" }}>
+      <div style={{ maxWidth: 1600, margin: "0 auto", padding: "5rem clamp(1.5rem,3vw,2.5rem) 3rem" }}>
 
         {/* Header */}
-        <header style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: "1.5rem", marginBottom: "3rem" }}>
+        <header style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: "1.5rem", marginBottom: "2.5rem" }}>
           <div>
             <motion.div
               initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
               transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              style={{ width: 2, height: 40, background: "var(--accent)", opacity: 0.5, marginBottom: "1.2rem", transformOrigin: "top" }}
+              style={{ width: 2, height: 36, background: "var(--accent)", opacity: 0.5, marginBottom: "1rem", transformOrigin: "top" }}
             />
             <motion.h1
               initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
@@ -224,14 +247,14 @@ export default function Works({ locale, kind = "performance" }: { locale: string
         <motion.div
           initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
           transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-          style={{ height: 1, background: "rgba(245,240,229,0.07)", marginBottom: "2.5rem", transformOrigin: "left" }}
+          style={{ height: 1, background: "rgba(245,240,229,0.07)", marginBottom: "2rem", transformOrigin: "left" }}
         />
 
-        {/* Current — bento grid, same padding as Featured */}
+        {/* Current — bento grid */}
         {current.length > 0 && (
-          <section style={{ marginBottom: "4rem" }}>
+          <section style={{ marginBottom: "3rem" }}>
             {kind === "performance" && (
-              <p className="eyebrow" style={{ marginBottom: "1.5rem", color: "var(--accent)", opacity: 0.5 }}>Текущий репертуар</p>
+              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Текущий репертуар</p>
             )}
             <div
               className="works-grid"
@@ -247,16 +270,16 @@ export default function Works({ locale, kind = "performance" }: { locale: string
           </section>
         )}
 
-        {/* Archive — editorial list */}
+        {/* Archive */}
         {archive.length > 0 && (
           <section>
             {current.length > 0 && (
-              <p className="eyebrow" style={{ marginBottom: "1.5rem", color: "var(--accent)", opacity: 0.5 }}>Архив</p>
+              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Архив</p>
             )}
             {archive.map((w, i) => (
               <ArchiveRow key={w.slug} w={w} basePath={basePath} index={i}
-                onHover={url => { setHoverUrl(url); setPreviewOn(true); }}
-                onLeave={() => setPreviewOn(false)}
+                activeSlug={activeSlug}
+                onFirstClick={handleFirstClick}
               />
             ))}
           </section>
@@ -267,8 +290,6 @@ export default function Works({ locale, kind = "performance" }: { locale: string
         .cur-img { transition: transform 750ms var(--ease-expo); }
         .cur-card:hover .cur-img { transform: scale(1.06); }
         .cur-card:hover .cur-corner { width: 28px !important; height: 28px !important; }
-        .arc-row:hover .arc-title { letter-spacing: 0.025em !important; color: rgba(212,175,55,0.7) !important; }
-        .arc-row:hover .arc-line { width: 100% !important; }
         @media(max-width:699px) {
           .works-grid { grid-template-columns: 1fr !important; grid-auto-rows: 66vw !important; }
           .works-grid > * { grid-column: span 1 !important; grid-row: span 1 !important; }

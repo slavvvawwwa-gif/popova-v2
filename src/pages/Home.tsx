@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import { getFeatured, type WorkCard } from "@/lib/data";
 import CharReveal from "@/components/ui/CharReveal";
 import ThreeHero from "@/components/three/ThreeHero";
@@ -29,7 +29,7 @@ function LiquidLetter({
         WebkitBackgroundClip: "text",
         WebkitTextFillColor: "transparent",
         backgroundClip: "text",
-        transition: "background-position 0.7s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: "background-position 1.75s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
       {char}
@@ -115,13 +115,8 @@ function FeaturedCard({ w, i }: { w: WorkCard; i: number }) {
   );
 }
 
-/* ── Golden fog splash on hero click ── */
-let splashId = 0;
-type Splash = { id: number; x: number; y: number };
-
 export default function Home({ locale }: { locale: string }) {
   const [featured, setFeatured] = useState<WorkCard[]>([]);
-  const [splashes, setSplashes] = useState<Splash[]>([]);
   const heroRef   = useRef<HTMLDivElement>(null);
   const mouseXRef = useRef(0);
   const mouseYRef = useRef(0);
@@ -140,23 +135,12 @@ export default function Home({ locale }: { locale: string }) {
     mouseXRef.current = dx; mouseYRef.current = dy;
   };
 
-  // Issue #9: golden fog on click of empty background
-  const onHeroClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const tag = (e.target as HTMLElement).tagName.toLowerCase();
-    if (tag === "a" || tag === "button" || (e.target as HTMLElement).closest("a, button")) return;
-    const r = heroRef.current!.getBoundingClientRect();
-    const id = ++splashId;
-    setSplashes(s => [...s, { id, x: e.clientX - r.left, y: e.clientY - r.top }]);
-    setTimeout(() => setSplashes(s => s.filter(sp => sp.id !== id)), 1400);
-  }, []);
-
   return (
     <>
       {/* ── Hero ── */}
       <section
         ref={heroRef}
         onMouseMove={onMouseMove}
-        onClick={onHeroClick}
         style={{ position: "relative", height: "100svh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" }}
       >
         <ThreeHero mouseX={mouseXRef} mouseY={mouseYRef} />
@@ -167,30 +151,6 @@ export default function Home({ locale }: { locale: string }) {
           background: "radial-gradient(ellipse 55% 55% at 50% 50%, rgba(212,175,55,0.055) 0%, transparent 70%)",
           x: smX, y: smY,
         }}/>
-
-        {/* Issue #9: click fog splashes */}
-        <AnimatePresence>
-          {splashes.map(sp => (
-            <motion.div
-              key={sp.id}
-              initial={{ opacity: 0.45, scale: 0 }}
-              animate={{ opacity: 0, scale: 4.5 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                position: "absolute",
-                left: sp.x, top: sp.y,
-                width: 220, height: 220,
-                borderRadius: "50%",
-                background: "radial-gradient(circle, rgba(212,175,55,0.35) 0%, rgba(184,115,51,0.12) 45%, transparent 70%)",
-                transform: "translate(-50%, -50%)",
-                pointerEvents: "none",
-                zIndex: 2,
-                filter: "blur(18px)",
-              }}
-            />
-          ))}
-        </AnimatePresence>
 
         {/* Eyebrow */}
         <motion.p
@@ -273,8 +233,6 @@ export default function Home({ locale }: { locale: string }) {
           {new Date().getFullYear()}
         </motion.span>
 
-        {/* Issue #9: gradient darkening toward bottom of hero */}
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "35%", background: "linear-gradient(to bottom, transparent, var(--bg))", pointerEvents: "none", zIndex: 3 }}/>
       </section>
 
       {/* ── Featured works — Issue #1: reduced top padding ── */}
