@@ -4,6 +4,10 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { getFeatured, type WorkCard } from "@/lib/data";
+import SplineHero from "@/components/three/SplineHero";
+
+// ← Вставь сюда URL своей Spline-сцены (Publish → Embed → scene URL)
+const SPLINE_URL = "";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -60,7 +64,11 @@ export default function Home({ locale }: { locale:string }) {
     <>
       {/* Hero */}
       <section style={{ position:"relative", height:"100svh", display:"flex", alignItems:"center", overflow:"hidden" }}>
-        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 60% 80% at 20% 50%, rgba(214,48,60,0.06) 0%, transparent 70%)" }} aria-hidden="true"/>
+        {/* Spline 3D scene — replaced by SplineHero when URL is set */}
+        {SPLINE_URL
+          ? <SplineHero url={SPLINE_URL}/>
+          : <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 60% 80% at 20% 50%, rgba(214,48,60,0.06) 0%, transparent 70%)" }} aria-hidden="true"/>
+        }
 
         <div style={{ position:"relative", zIndex:1, padding:"0 clamp(1.5rem,5vw,4rem)", maxWidth:1300, margin:"0 auto", width:"100%" }}>
           <motion.p className="eyebrow" initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.8 }} style={{ marginBottom:"1.5rem" }}>

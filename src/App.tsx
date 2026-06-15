@@ -1,4 +1,4 @@
-import { Suspense, useState, useRef } from "react";
+import { Suspense, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { I18nextProvider } from "react-i18next";
@@ -11,7 +11,6 @@ import Works from "@/pages/Works";
 import About from "@/pages/About";
 import Contacts from "@/pages/Contacts";
 import WorkDetail from "@/pages/WorkDetail";
-import MaskScene from "@/components/three/MaskScene";
 
 const easeArr: [number,number,number,number] = [0.16,1,0.3,1];
 const pageVariants = {
@@ -43,7 +42,6 @@ function AnimatedRoutes({ locale }: { locale:string }) {
 
 function AppInner() {
   const [locale, setLocale] = useState("ru");
-  const scrollY = useRef(0);
   useLenis();
   useCursor();
 
@@ -51,11 +49,6 @@ function AppInner() {
 
   return (
     <>
-      {/* Global 3D background — mask scene renders on all pages */}
-      <Suspense fallback={null}>
-        <MaskScene scrollY={scrollY}/>
-      </Suspense>
-
       <div id="cursor"/>
       <div id="cursor-ring"/>
 
