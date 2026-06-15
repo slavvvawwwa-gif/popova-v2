@@ -71,14 +71,14 @@ function ArchiveRow({ w, basePath, index, activeSlug, onFirstClick }: {
         className="arc-row"
         style={{ textDecoration: "none", display: "block", position: "relative", cursor: "pointer" }}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)" }}>
-          <span style={{ fontFamily: "var(--serif)", fontSize: "0.82rem", color: "var(--text-3)", fontVariantNumeric: "tabular-nums" }}>
+        <div className="arc-inner" style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)" }}>
+          <span style={{ fontFamily: "var(--serif)", fontSize: "0.82rem", color: "var(--text-3)", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
             {w.year}
           </span>
-          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: isActive ? "rgba(212,175,55,0.8)" : "var(--text-1)", lineHeight: 1.1, transition: "color 400ms" }}>
+          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: isActive ? "rgba(212,175,55,0.8)" : "var(--text-1)", lineHeight: 1.1, transition: "color 400ms", minWidth: 0 }}>
             {w.title}
           </span>
-          <span style={{ fontSize: "0.6rem", color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+          <span className="arc-theatre" style={{ fontSize: "0.6rem", color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
             {w.theatre}
           </span>
         </div>
@@ -299,6 +299,8 @@ export default function Works({ locale, kind = "performance" }: { locale: string
           .works-sep { margin-left: 1.25rem !important; margin-right: 1.25rem !important; }
           .works-labels { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
           .works-archive { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+          .arc-inner { grid-template-columns: 3.5rem 1fr !important; gap: 1rem !important; }
+          .arc-theatre { display: none !important; }
         }
       `}</style>
     </>

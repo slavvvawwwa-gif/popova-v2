@@ -35,18 +35,17 @@ function PhotoStack({ photos }: { photos: { url: string | null; alt: string }[] 
       onClick={photos.length > 1 ? handleClick : undefined}
       style={{ position: "relative", width: "100%", aspectRatio: "3/4", cursor: photos.length > 1 ? "pointer" : "default" }}
     >
-      {/* Background stacked cards */}
+      {/* Only the single card immediately behind the active one */}
       {photos.map((p, i) => {
         if (!p.url) return null;
-        const order = ((i - active) % photos.length + photos.length) % photos.length;
-        if (order === 0) return null;
-        const rot = rotations[Math.min(order, rotations.length - 1)];
+        const order = ((i - active) % n + n) % n;
+        if (order !== 1) return null;         // only show the next card
         return (
           <div key={i} style={{
             position: "absolute", inset: 0,
-            transform: `rotate(${rot}deg) scale(${1 - order * 0.018})`,
+            transform: `rotate(${rotations[1]}deg) scale(0.982)`,
             transformOrigin: "bottom center",
-            zIndex: photos.length - order,
+            zIndex: 1,
             transition: "transform 0.5s ease",
             pointerEvents: "none",
           }}>
