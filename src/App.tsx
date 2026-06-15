@@ -80,11 +80,14 @@ type Splash = { id: number; x: number; y: number };
 function AppInner() {
   const [locale, setLocale]   = useState("ru");
   const [splashes, setSplashes] = useState<Splash[]>([]);
+  const [hue, setHue]         = useState(45);
   useLenis();
   useCursor();
 
   useEffect(() => {
-    getSiteTheme().then(t => { if (t) applyTheme(t.hue); });
+    getSiteTheme().then(t => {
+      if (t) { applyTheme(t.hue); setHue(t.hue); }
+    });
   }, []);
 
   // Global background click fog — fires on any non-interactive element
@@ -102,7 +105,7 @@ function AppInner() {
     <div onClick={handleGlobalClick} style={{ minHeight: "100svh" }}>
       {/* Global WebGL shader — fixed, every page */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
-        <ShaderBackground />
+        <ShaderBackground hue={hue} />
       </div>
 
       {/* Fixed bottom-of-viewport gradient — fades shader into bg on scroll */}

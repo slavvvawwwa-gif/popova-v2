@@ -1,87 +1,74 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { PortableText } from "@portabletext/react";
 import { getBio, type BioData } from "@/lib/data";
 
 /* ── PhotoStack: visual card stack + strict prev/next nav ── */
 function PhotoStack({ photos }: { photos: { url: string | null; alt: string }[] }) {
-  const [active, setActive] = useState(0);
-  const [dir,    setDir]    = useState(1);
-  // useRef for the lock — always current, immune to stale closure / batching issues
+  // Single combined state — eliminates any possibility of split-update batching bugs
+  const [nav, setNav] = useState({ active: 0, dir: 1 });
   const lockRef = useRef(false);
 
   if (!photos.length) return null;
 
-  const rotations = [0, -4, 3.5, -2.5, 4.5];
+  const { active, dir } = nav;
   const n = photos.length;
 
-  // Single click handler — checks which horizontal half was tapped
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-    if (lockRef.current) return;   // block while animation is running
+    if (lockRef.current || n <= 1) return;
     lockRef.current = true;
-
     const rect = e.currentTarget.getBoundingClientRect();
     const d = (e.clientX - rect.left) < rect.width * 0.45 ? -1 : 1;
-
-    setDir(d);
-    setActive(a => d > 0 ? (a < n - 1 ? a + 1 : 0) : (a > 0 ? a - 1 : n - 1));
-
-    setTimeout(() => { lockRef.current = false; }, 500);
+    setNav(s => {
+      const next = d > 0
+        ? (s.active < n - 1 ? s.active + 1 : 0)
+        : (s.active > 0 ? s.active - 1 : n - 1);
+      return { active: next, dir: d };
+    });
+    setTimeout(() => { lockRef.current = false; }, 400);
   };
+
+  // Index of the card one step ahead — shown as the "peek" behind the active card
+  const behindIdx = (active + 1) % n;
 
   return (
     <div
-      onClick={photos.length > 1 ? handleClick : undefined}
-      style={{ position: "relative", width: "100%", aspectRatio: "3/4", cursor: photos.length > 1 ? "pointer" : "default" }}
+      onClick={n > 1 ? handleClick : undefined}
+      style={{ position: "relative", width: "100%", aspectRatio: "3/4", cursor: n > 1 ? "pointer" : "default" }}
     >
-      {/* Only the single card immediately behind the active one */}
-      {photos.map((p, i) => {
-        if (!p.url) return null;
-        const order = ((i - active) % n + n) % n;
-        if (order !== 1) return null;         // only show the next card
-        return (
-          <div key={i} style={{
-            position: "absolute", inset: 0,
-            transform: `rotate(${rotations[1]}deg) scale(0.982)`,
-            transformOrigin: "bottom center",
-            zIndex: 1,
-            transition: "transform 0.5s ease",
-            pointerEvents: "none",
-          }}>
-            <img src={p.url} alt={p.alt}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          </div>
-        );
-      })}
+      {/* Single background card — always the next one in the deck */}
+      {photos[behindIdx]?.url && (
+        <div style={{
+          position: "absolute", inset: 0,
+          transform: "rotate(-4deg) scale(0.982)",
+          transformOrigin: "bottom center",
+          zIndex: 1,
+          pointerEvents: "none",
+        }}>
+          <img src={photos[behindIdx].url!} alt={photos[behindIdx].alt}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        </div>
+      )}
 
-      {/* Active card */}
-      <AnimatePresence initial={false} custom={dir} mode="wait">
-        <motion.div
-          key={active}
-          custom={dir}
-          variants={{
-            initial: (d: number) => ({ opacity: 0, x: `${d > 0 ? 10 : -10}%`, rotate: d > 0 ? 1.5 : -1.5 }),
-            animate: { opacity: 1, x: 0, rotate: 0 },
-            exit:    (d: number) => ({ opacity: 0, x: `${d > 0 ? -10 : 10}%`, rotate: d > 0 ? -1.5 : 1.5 }),
-          }}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-          style={{ position: "absolute", inset: 0, zIndex: photos.length + 1, pointerEvents: "none" }}
-        >
-          {photos[active].url && (
-            <img src={photos[active].url!} alt={photos[active].alt}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      {/* Active card — key change causes unmount+remount → enter animation fires, no exit needed */}
+      <motion.div
+        key={active}
+        initial={{ opacity: 0, x: dir > 0 ? "8%" : "-8%" }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+        style={{ position: "absolute", inset: 0, zIndex: 2, overflow: "hidden", pointerEvents: "none" }}
+      >
+        {photos[active]?.url && (
+          <img src={photos[active].url!} alt={photos[active].alt}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        )}
+      </motion.div>
 
       {/* Counter */}
-      {photos.length > 1 && (
-        <div style={{ position: "absolute", bottom: "1rem", right: "1rem", background: "rgba(7,5,10,0.65)", color: "var(--text-2)", fontSize: "0.52rem", letterSpacing: "0.15em", padding: "0.3rem 0.6rem", zIndex: photos.length + 2, pointerEvents: "none" }}>
-          {active + 1} / {photos.length}
+      {n > 1 && (
+        <div style={{ position: "absolute", bottom: "1rem", right: "1rem", background: "rgba(7,5,10,0.65)", color: "var(--text-2)", fontSize: "0.52rem", letterSpacing: "0.15em", padding: "0.3rem 0.6rem", zIndex: 3, pointerEvents: "none" }}>
+          {active + 1} / {n}
         </div>
       )}
     </div>
