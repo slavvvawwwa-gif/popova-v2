@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getFeatured, type WorkCard } from "@/lib/data";
-import ShaderBackground from "@/components/ShaderBackground";
 
 const BENTO = [{c:"col-span-8",r:"row-span-2"},{c:"col-span-4",r:"row-span-2"},{c:"col-span-4",r:"row-span-1"},{c:"col-span-4",r:"row-span-1"},{c:"col-span-4",r:"row-span-1"}];
 const spanFor = (i:number) => BENTO[i%5];
@@ -42,7 +41,6 @@ export default function Home({ locale }: { locale:string }) {
     <>
       {/* Hero */}
       <section style={{ position:"relative", height:"100svh", display:"flex", alignItems:"center", overflow:"hidden" }}>
-        <ShaderBackground/>
 
         <div style={{ position:"relative", zIndex:1, padding:"0 clamp(1.5rem,5vw,4rem)", maxWidth:1300, margin:"0 auto", width:"100%" }}>
           <motion.p className="eyebrow" initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.8 }} style={{ marginBottom:"1.5rem" }}>

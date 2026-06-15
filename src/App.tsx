@@ -11,6 +11,7 @@ import Works from "@/pages/Works";
 import About from "@/pages/About";
 import Contacts from "@/pages/Contacts";
 import WorkDetail from "@/pages/WorkDetail";
+import ShaderBackground from "@/components/ShaderBackground";
 
 const easeArr: [number,number,number,number] = [0.16,1,0.3,1];
 const pageVariants = {
@@ -49,6 +50,11 @@ function AppInner() {
 
   return (
     <>
+      {/* Global shader — fixed, fills entire viewport on every page */}
+      <div style={{ position:"fixed", inset:0, zIndex:0, pointerEvents:"none" }}>
+        <ShaderBackground/>
+      </div>
+
       <div id="cursor"/>
       <div id="cursor-ring"/>
 
