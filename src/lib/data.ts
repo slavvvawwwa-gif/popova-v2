@@ -8,6 +8,8 @@ const pick = (r: Record<string,unknown>, base: string, locale: Locale): string =
 const enOr = (r: Record<string,unknown>, base: string, locale: Locale): string =>
   ((locale === "en" ? (r[`${base}_en`] as string) : "") || (r[base] as string) || "") as string;
 
+function asArr<T>(v: unknown): T[] { return Array.isArray(v) ? (v as T[]) : []; }
+
 export interface WorkCard {
   slug: string; title: string; theatre: string; year: number|null;
   genre: string; status: string; featured: boolean; kind: string;
@@ -34,8 +36,6 @@ function mapCard(r: Record<string,unknown>, locale: Locale): WorkCard {
   };
 }
 
-function asArr<T>(v: unknown): T[] { return Array.isArray(v) ? (v as T[]) : []; }
-
 export async function getFeatured(locale: Locale = "ru"): Promise<WorkCard[]> {
   const rows = await client.fetch<Record<string,unknown>[]>(
     `*[_type=="performance"&&featured==true&&!defined(parent)]{${CARD}}`
@@ -55,14 +55,16 @@ export interface WorkDetail extends WorkCard {
   fullDescription: unknown[]|null;
   gallery: { url:string|null; alt:string; caption:string }[];
   role: string; playwright: string; artist: string; composer: string;
-  choreographer: string; performers: string; creditsExtra: string;
+  choreographer: string; performers: string;
+  lightingDesigner: string; setDesigner: string;
+  creditsExtra: string;
   children: WorkCard[];
   videos: { url:string; label:string }[];
 }
 
 export async function getPerformance(slug: string, locale: Locale = "ru"): Promise<WorkDetail|null> {
   const r = await client.fetch<Record<string,unknown>|null>(
-    `*[_type=="performance"&&slug.current==$slug][0]{${CARD},full_description_ru,full_description_en,playwright,artist,composer,choreographer,performers,credits_extra_ru,credits_extra_en,gallery[]{asset,alt,caption_ru,caption_en},"children":*[_type=="performance"&&parent._ref==^._id]|order(year desc){${CARD}},video_links[]{url,label}}`,
+    `*[_type=="performance"&&slug.current==$slug][0]{${CARD},full_description_ru,full_description_en,role,playwright,artist,lighting_designer,set_designer,composer,choreographer,performers,credits_extra_ru,credits_extra_en,gallery[]{asset,alt,caption_ru,caption_en},"children":*[_type=="performance"&&parent._ref==^._id]|order(year desc){${CARD}},video_links[]{url,label}}`,
     { slug }
   );
   if (!r) return null;
@@ -81,6 +83,8 @@ export async function getPerformance(slug: string, locale: Locale = "ru"): Promi
     role: (r.role as string) ?? "",
     playwright: (r.playwright as string) ?? "",
     artist: (r.artist as string) ?? "",
+    lightingDesigner: (r.lighting_designer as string) ?? "",
+    setDesigner: (r.set_designer as string) ?? "",
     composer: (r.composer as string) ?? "",
     choreographer: (r.choreographer as string) ?? "",
     performers: (r.performers as string) ?? "",
