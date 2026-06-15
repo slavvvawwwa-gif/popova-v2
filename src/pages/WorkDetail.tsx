@@ -1,8 +1,60 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { PortableText } from "@portabletext/react";
 import { getPerformance, type WorkDetail as WD, type GalleryImg } from "@/lib/data";
+
+/* ── Native-scroll gallery — always works, no JS measurement needed ── */
+function ScrollGallery({ images, label, onOpen }: {
+  images: GalleryImg[];
+  label?: string;
+  onOpen: (i: number) => void;
+}) {
+  if (!images.length) return null;
+  return (
+    <div style={{ marginTop:"4rem" }}>
+      {label && <p className="eyebrow" style={{ padding:"0 clamp(1.5rem,3vw,2.5rem)", marginBottom:"1.5rem", color:"var(--accent)", opacity:0.65 }}>{label}</p>}
+
+      <div className="gallery-scroll" style={{ padding:"0 clamp(1.5rem,3vw,2.5rem)" }}>
+        {images.map((g, i) => g.url && (
+          <div
+            key={i}
+            className="gallery-scroll-item"
+            style={{ width:"clamp(240px,26vw,440px)", height:"65vh" }}
+            onClick={() => onOpen(i)}
+          >
+            <img src={g.url} alt={g.alt ?? ""} draggable={false}/>
+            {g.caption && (
+              <p style={{
+                position:"absolute", bottom:0, left:0, right:0,
+                padding:"0.75rem 1rem",
+                background:"linear-gradient(to top, rgba(7,5,10,0.80), transparent)",
+                fontSize:"0.68rem", color:"var(--text-2)", letterSpacing:"0.05em",
+                pointerEvents:"none",
+              }}>
+                {g.caption}
+              </p>
+            )}
+            {/* Gold index dot */}
+            <div style={{
+              position:"absolute", top:"1rem", right:"1rem",
+              width:6, height:6, borderRadius:"50%",
+              background:"var(--accent)", opacity:0.5,
+              pointerEvents:"none",
+            }}/>
+          </div>
+        ))}
+        {/* trailing spacer */}
+        <div style={{ flexShrink:0, width:8 }}/>
+      </div>
+
+      {/* Scroll hint on first render */}
+      <p className="eyebrow" style={{ textAlign:"right", padding:"0.75rem clamp(1.5rem,3vw,2.5rem) 0", fontSize:"0.48rem", opacity:0.3 }}>
+        ← drag to scroll →
+      </p>
+    </div>
+  );
+}
 
 export default function WorkDetail({ locale, basePath="/works" }: { locale:string; basePath?:string }) {
   const { slug } = useParams<{ slug:string }>();
@@ -15,7 +67,7 @@ export default function WorkDetail({ locale, basePath="/works" }: { locale:strin
 
   if (!work) return (
     <div style={{ height:"100svh", display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <span className="eyebrow">Загрузка…</span>
+      <span className="eyebrow" style={{ color:"var(--accent)", opacity:0.5 }}>Загрузка…</span>
     </div>
   );
 
@@ -30,13 +82,11 @@ export default function WorkDetail({ locale, basePath="/works" }: { locale:strin
     ["Перформеры", work.performers],
   ] as [string,string][]).filter(([,v]) => Boolean(v));
 
-  // All images across main gallery + content galleries for unified lightbox
   const allImgs: GalleryImg[] = [
     ...work.gallery,
     ...work.content.flatMap(b => b.kind === "gallery" ? b.images : []),
   ];
 
-  // offset of content gallery[idx] inside allImgs
   const contentGalleryOffset = (idx: number) =>
     work.gallery.length +
     work.content.slice(0, idx)
@@ -45,90 +95,127 @@ export default function WorkDetail({ locale, basePath="/works" }: { locale:strin
 
   return (
     <div>
-      {/* Cover */}
-      <div style={{ position:"relative", height:"75svh", overflow:"hidden" }}>
+      {/* ── Cover ── */}
+      <div style={{ position:"relative", height:"80svh", overflow:"hidden" }}>
         {work.coverUrl && (
           <img src={work.coverUrl} alt={work.title}
             style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
         )}
-        <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, rgba(8,8,8,0.2) 0%, rgba(8,8,8,0.85) 100%)" }}/>
-        <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"clamp(2rem,5vw,4rem)" }}>
-          <p className="eyebrow" style={{ marginBottom:"0.75rem" }}>
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(170deg, transparent 30%, rgba(7,5,10,0.96) 100%)" }}/>
+
+        {/* Gold accent bar */}
+        <motion.div
+          initial={{ scaleY:0 }}
+          animate={{ scaleY:1 }}
+          transition={{ duration:1.2, delay:0.3, ease:[0.16,1,0.3,1] }}
+          style={{ position:"absolute", left:0, bottom:0, top:0, width:2, background:"linear-gradient(to bottom, transparent, var(--accent))", transformOrigin:"bottom" }}
+        />
+
+        <motion.div
+          initial={{ opacity:0, y:30 }}
+          animate={{ opacity:1, y:0 }}
+          transition={{ duration:0.9, delay:0.2, ease:[0.16,1,0.3,1] }}
+          style={{ position:"absolute", bottom:0, left:0, right:0, padding:"clamp(2rem,5vw,4.5rem)" }}
+        >
+          <p className="eyebrow" style={{ marginBottom:"1rem", color:"var(--accent)", opacity:0.65 }}>
             {work.theatre}{work.year ? ` · ${work.year}` : ""}
           </p>
-          <h1 style={{ fontFamily:"var(--serif)", fontSize:"clamp(2rem,7vw,6rem)", fontWeight:300, lineHeight:0.92, color:"var(--text-1)" }}>
+          <h1 style={{ fontFamily:"var(--serif)", fontSize:"clamp(2.5rem,7.5vw,7rem)", fontWeight:300, lineHeight:0.9, color:"var(--text-1)", letterSpacing:"-0.02em" }}>
             {work.title}
           </h1>
           {work.shortDescription && (
-            <p style={{ marginTop:"1rem", color:"var(--text-2)", fontSize:"0.9375rem", maxWidth:600, lineHeight:1.7 }}>
+            <p style={{ marginTop:"1.2rem", color:"var(--text-2)", fontSize:"1rem", maxWidth:560, lineHeight:1.75 }}>
               {work.shortDescription}
             </p>
           )}
-        </div>
+        </motion.div>
       </div>
 
-      {/* Body */}
-      <div style={{ maxWidth:1200, margin:"0 auto", padding:"4rem 2rem 2rem", display:"grid", gridTemplateColumns:"minmax(0,2fr) minmax(0,1fr)", gap:"4rem", alignItems:"start" }}>
+      {/* ── Body ── */}
+      <div style={{ maxWidth:1280, margin:"0 auto", padding:"5rem clamp(1.5rem,3vw,2.5rem) 2rem", display:"grid", gridTemplateColumns:"minmax(0,2fr) minmax(0,1fr)", gap:"5rem", alignItems:"start" }}>
         <div>
-          <Link to={basePath} style={{ fontSize:"0.6rem", letterSpacing:"0.18em", textTransform:"uppercase", color:"var(--text-2)", textDecoration:"none", display:"inline-flex", alignItems:"center", gap:"0.5rem", marginBottom:"3rem" }}>
+          <Link to={basePath} style={{ fontSize:"0.58rem", letterSpacing:"0.2em", textTransform:"uppercase", color:"var(--text-3)", textDecoration:"none", display:"inline-flex", alignItems:"center", gap:"0.6rem", marginBottom:"3.5rem", transition:"color 300ms" }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--accent)"}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--text-3)"}
+          >
             ← Назад
           </Link>
+
           {work.fullDescription && (
-            <div style={{ color:"var(--text-2)", lineHeight:1.85, fontSize:"0.9375rem", marginBottom:"3rem" }}>
+            <motion.div
+              initial={{ opacity:0, y:20 }}
+              animate={{ opacity:1, y:0 }}
+              transition={{ duration:0.8, delay:0.35 }}
+              style={{ color:"var(--text-2)", lineHeight:1.9, fontSize:"1rem", marginBottom:"3rem" }}
+            >
               <PortableText value={work.fullDescription as Parameters<typeof PortableText>[0]["value"]}/>
-            </div>
+            </motion.div>
           )}
+
           {work.children.length > 0 && (
-            <div style={{ marginTop:"3rem" }}>
-              <p className="eyebrow" style={{ marginBottom:"1.5rem" }}>Выпуски</p>
+            <div style={{ marginTop:"3rem", paddingTop:"3rem", borderTop:"1px solid rgba(245,240,229,0.06)" }}>
+              <p className="eyebrow" style={{ marginBottom:"1.5rem", color:"var(--accent)", opacity:0.55 }}>Выпуски</p>
               {work.children.map(c => (
                 <Link key={c.slug} to={`${basePath}/${c.slug}`}
-                  style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", padding:"0.75rem 0", borderBottom:"1px solid rgba(240,240,240,0.05)", textDecoration:"none", opacity:0.6, transition:"opacity 200ms" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity="1"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity="0.6"}
+                  style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", padding:"0.9rem 0", borderBottom:"1px solid rgba(245,240,229,0.04)", textDecoration:"none" }}
+                  className="child-link"
                 >
-                  <span style={{ fontFamily:"var(--serif)", fontSize:"1.1rem", color:"var(--text-1)" }}>{c.title}</span>
-                  <span style={{ fontSize:"0.7rem", color:"var(--text-3)" }}>{c.year}</span>
+                  <span style={{ fontFamily:"var(--serif)", fontSize:"1.15rem", color:"var(--text-1)", fontWeight:300 }}>{c.title}</span>
+                  <span style={{ fontSize:"0.68rem", color:"var(--text-3)", letterSpacing:"0.06em" }}>{c.year}</span>
                 </Link>
               ))}
             </div>
           )}
         </div>
 
+        {/* Credits sidebar */}
         {credits.length > 0 && (
-          <div style={{ position:"sticky", top:"7rem" }}>
+          <motion.div
+            initial={{ opacity:0, x:20 }}
+            animate={{ opacity:1, x:0 }}
+            transition={{ duration:0.8, delay:0.45 }}
+            style={{ position:"sticky", top:"7rem" }}
+          >
+            {/* Gold side accent */}
+            <div style={{ width:1, height:40, background:"var(--accent)", opacity:0.4, marginBottom:"2rem" }}/>
+
             {credits.map(([label, val]) => (
-              <div key={label} style={{ marginBottom:"1.5rem" }}>
-                <p className="eyebrow" style={{ marginBottom:"0.3rem" }}>{label}</p>
-                <p style={{ color:"var(--text-1)", fontSize:"0.875rem", lineHeight:1.6 }}>{val}</p>
+              <div key={label} style={{ marginBottom:"1.75rem" }}>
+                <p className="eyebrow" style={{ marginBottom:"0.35rem", color:"var(--accent)", opacity:0.5 }}>{label}</p>
+                <p style={{ color:"var(--text-1)", fontSize:"0.9rem", lineHeight:1.65, fontFamily:"var(--serif)", fontWeight:300 }}>{val}</p>
               </div>
             ))}
+
             {work.creditsExtra && (
-              <p style={{ color:"var(--text-2)", fontSize:"0.8rem", lineHeight:1.6, marginTop:"2rem", paddingTop:"2rem", borderTop:"1px solid rgba(240,240,240,0.06)" }}>
+              <p style={{ color:"var(--text-3)", fontSize:"0.8rem", lineHeight:1.65, marginTop:"2.5rem", paddingTop:"2.5rem", borderTop:"1px solid rgba(245,240,229,0.06)" }}>
                 {work.creditsExtra}
               </p>
             )}
+
             {work.videos.map(v => (
               <a key={v.url} href={v.url} target="_blank" rel="noopener noreferrer"
-                style={{ display:"block", marginTop:"2rem", fontSize:"0.6rem", letterSpacing:"0.18em", textTransform:"uppercase", color:"var(--accent)", textDecoration:"none" }}>
+                style={{ display:"inline-flex", alignItems:"center", gap:"0.6rem", marginTop:"2.5rem", fontSize:"0.58rem", letterSpacing:"0.2em", textTransform:"uppercase", color:"var(--accent)", textDecoration:"none", opacity:0.75, transition:"opacity 200ms" }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity="1"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity="0.75"}
+              >
                 ▶ {v.label || "Смотреть видео"}
               </a>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
 
-      {/* Main gallery */}
+      {/* ── Main gallery (native scroll, always works) ── */}
       {work.gallery.length > 0 && (
-        <DragGallery images={work.gallery} offset={0} label="Галерея" onOpen={i => setLb(i)}/>
+        <ScrollGallery images={work.gallery} label="Галерея" onOpen={i => setLb(i)}/>
       )}
 
-      {/* Content blocks */}
+      {/* ── Content blocks ── */}
       {work.content.map((block, idx) => {
         if (block.kind === "text") {
           return (
-            <div key={idx} style={{ maxWidth:1200, margin:"0 auto", padding:"4rem 2rem" }}>
-              <div style={{ maxWidth:720, color:"var(--text-2)", lineHeight:1.9, fontSize:"0.9375rem" }}>
+            <div key={idx} style={{ maxWidth:1280, margin:"0 auto", padding:"4rem clamp(1.5rem,3vw,2.5rem)" }}>
+              <div style={{ maxWidth:740, color:"var(--text-2)", lineHeight:1.9, fontSize:"1rem" }}>
                 {block.body && (
                   <PortableText value={block.body as Parameters<typeof PortableText>[0]["value"]}/>
                 )}
@@ -139,94 +226,81 @@ export default function WorkDetail({ locale, basePath="/works" }: { locale:strin
         if (block.kind === "gallery" && block.images.length > 0) {
           const offset = contentGalleryOffset(idx);
           return (
-            <DragGallery key={idx} images={block.images} offset={offset} onOpen={i => setLb(offset + i)}/>
+            <ScrollGallery key={idx} images={block.images} onOpen={i => setLb(offset + i)}/>
           );
         }
         return null;
       })}
 
-      {/* Lightbox */}
+      <div style={{ height:"6rem" }}/>
+
+      {/* ── Lightbox ── */}
       <AnimatePresence>
         {lb !== null && (() => {
           const cur = allImgs[lb];
           if (!cur) return null;
+          const prev = () => setLb(i => i !== null ? (i > 0 ? i-1 : allImgs.length-1) : 0);
+          const next = () => setLb(i => i !== null ? (i < allImgs.length-1 ? i+1 : 0) : 0);
           return (
-            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-              style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.96)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" }}
+            <motion.div
+              initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+              transition={{ duration:0.25 }}
+              style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.97)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" }}
               onClick={() => setLb(null)}
             >
-              {cur.url && (
-                <img src={cur.url} alt={cur.alt}
-                  style={{ maxHeight:"90vh", maxWidth:"90vw", objectFit:"contain" }}
-                  onClick={e => e.stopPropagation()}/>
+              <motion.img
+                key={lb}
+                initial={{ opacity:0, scale:0.95 }}
+                animate={{ opacity:1, scale:1 }}
+                exit={{ opacity:0 }}
+                transition={{ duration:0.3, ease:[0.16,1,0.3,1] }}
+                src={cur.url ?? ""} alt={cur.alt}
+                style={{ maxHeight:"88vh", maxWidth:"88vw", objectFit:"contain" }}
+                onClick={e => e.stopPropagation()}
+                draggable={false}
+              />
+
+              {/* Caption */}
+              {cur.caption && (
+                <p style={{ position:"absolute", bottom:"2.5rem", left:"50%", transform:"translateX(-50%)", fontSize:"0.7rem", color:"var(--text-3)", letterSpacing:"0.06em", whiteSpace:"nowrap" }}>
+                  {cur.caption}
+                </p>
               )}
-              <button style={{ position:"absolute", left:"1.5rem", background:"none", border:"1px solid rgba(240,240,240,0.15)", color:"var(--text-1)", cursor:"pointer", padding:"0.75rem 1.25rem", fontSize:"1.2rem" }}
-                onClick={e => { e.stopPropagation(); setLb(i => i !== null ? (i > 0 ? i-1 : allImgs.length-1) : 0); }}>←</button>
-              <button style={{ position:"absolute", right:"1.5rem", background:"none", border:"1px solid rgba(240,240,240,0.15)", color:"var(--text-1)", cursor:"pointer", padding:"0.75rem 1.25rem", fontSize:"1.2rem" }}
-                onClick={e => { e.stopPropagation(); setLb(i => i !== null ? (i < allImgs.length-1 ? i+1 : 0) : 0); }}>→</button>
-              <button style={{ position:"absolute", top:"1.5rem", right:"1.5rem", background:"none", border:"none", color:"var(--text-2)", cursor:"pointer", fontSize:"1.5rem" }}
-                onClick={() => setLb(null)}>✕</button>
+
+              {/* Counter */}
+              <p className="eyebrow" style={{ position:"absolute", top:"1.5rem", left:"50%", transform:"translateX(-50%)", fontSize:"0.5rem", color:"var(--text-3)" }}>
+                {lb + 1} / {allImgs.length}
+              </p>
+
+              <button onClick={e => { e.stopPropagation(); prev(); }}
+                style={{ position:"absolute", left:"1.5rem", top:"50%", transform:"translateY(-50%)", background:"none", border:"1px solid rgba(245,240,229,0.10)", color:"var(--text-1)", cursor:"pointer", width:44, height:44, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.1rem", transition:"border-color 200ms" }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor="var(--accent)"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor="rgba(245,240,229,0.10)"}
+              >←</button>
+
+              <button onClick={e => { e.stopPropagation(); next(); }}
+                style={{ position:"absolute", right:"1.5rem", top:"50%", transform:"translateY(-50%)", background:"none", border:"1px solid rgba(245,240,229,0.10)", color:"var(--text-1)", cursor:"pointer", width:44, height:44, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.1rem", transition:"border-color 200ms" }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor="var(--accent)"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor="rgba(245,240,229,0.10)"}
+              >→</button>
+
+              <button onClick={() => setLb(null)}
+                style={{ position:"absolute", top:"1.5rem", right:"1.5rem", background:"none", border:"none", color:"var(--text-3)", cursor:"pointer", fontSize:"1.1rem", padding:"0.5rem", transition:"color 200ms" }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color="var(--text-1)"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color="var(--text-3)"}
+              >✕</button>
             </motion.div>
           );
         })()}
       </AnimatePresence>
-    </div>
-  );
-}
 
-/* Self-contained drag gallery — calculates its own dimensions after mount */
-function DragGallery({ images, offset: _offset, label, onOpen }: {
-  images: GalleryImg[];
-  offset: number;
-  label?: string;
-  onOpen: (i: number) => void;
-}) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const stripRef = useRef<HTMLDivElement>(null);
-  const [limit, setLimit] = useState(0);
-
-  useLayoutEffect(() => {
-    const calc = () => {
-      if (!wrapRef.current || !stripRef.current) return;
-      setLimit(Math.max(0, stripRef.current.scrollWidth - wrapRef.current.offsetWidth));
-    };
-    calc();
-    const ro = new ResizeObserver(calc);
-    if (wrapRef.current) ro.observe(wrapRef.current);
-    return () => ro.disconnect();
-  }, [images]);
-
-  return (
-    <div style={{ marginTop:"4rem", overflow:"hidden" }}>
-      {label && <p className="eyebrow" style={{ padding:"0 2rem", marginBottom:"1.5rem" }}>{label}</p>}
-      <div ref={wrapRef} style={{ overflow:"hidden", cursor:"grab", userSelect:"none" }}>
-        <motion.div
-          ref={stripRef}
-          drag="x"
-          dragConstraints={{ right:0, left: -limit }}
-          dragElastic={0.04}
-          dragMomentum={true}
-          style={{ display:"flex", gap:2 }}
-          whileDrag={{ cursor:"grabbing" }}
-        >
-          {images.map((g, i) => g.url && (
-            <div key={i}
-              style={{ flexShrink:0, width:"clamp(260px,28vw,460px)", height:"68vh", overflow:"hidden", position:"relative" }}
-              onClick={() => onOpen(i)}
-            >
-              <img src={g.url} alt={g.alt}
-                style={{ width:"100%", height:"100%", objectFit:"cover", transition:"transform 600ms var(--ease-expo)", pointerEvents:"none" }}
-                className="gal-img"/>
-              {g.caption && (
-                <p style={{ position:"absolute", bottom:0, left:0, right:0, padding:"0.75rem 1rem", background:"rgba(8,8,8,0.65)", fontSize:"0.7rem", color:"var(--text-2)", letterSpacing:"0.05em", pointerEvents:"none" }}>
-                  {g.caption}
-                </p>
-              )}
-            </div>
-          ))}
-        </motion.div>
-      </div>
-      <style>{`.gal-img:hover{transform:scale(1.03)}`}</style>
+      <style>{`
+        .child-link { opacity:0.55; transition:opacity 200ms; }
+        .child-link:hover { opacity:1; }
+        @media(max-width:699px) {
+          .body-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }

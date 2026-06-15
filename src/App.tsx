@@ -14,13 +14,21 @@ import WorkDetail from "@/pages/WorkDetail";
 import ShaderBackground from "@/components/ShaderBackground";
 import Grain from "@/components/ui/Grain";
 
-const ease = [0.76, 0, 0.24, 1] as const;
-
-// Clip-path curtain: new page wipes in from top
+// Theatre curtain: page scales up from below with a clip reveal
 const pageVariants = {
-  initial: { clipPath: "inset(0 0 100% 0)", opacity: 1 },
-  enter:   { clipPath: "inset(0 0 0% 0)",   opacity: 1, transition: { duration: 0.65, ease } },
-  exit:    { opacity: 0, transition: { duration: 0.2 } },
+  initial: {
+    opacity: 0,
+    clipPath: "inset(0 0 100% 0)",
+  },
+  enter: {
+    opacity: 1,
+    clipPath: "inset(0 0 0% 0)",
+    transition: { duration: 0.75, ease: [0.76, 0, 0.24, 1] },
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.22 },
+  },
 } as const;
 
 function AnimatedRoutes({ locale }: { locale: string }) {
@@ -33,18 +41,18 @@ function AnimatedRoutes({ locale }: { locale: string }) {
         initial="initial"
         animate="enter"
         exit="exit"
-        style={{ willChange: "clip-path, opacity" }}
+        className="page-wrap"
       >
         <Routes location={location}>
-          <Route path="/"             element={<Home locale={locale}/>}/>
-          <Route path="/about"        element={<About locale={locale}/>}/>
-          <Route path="/works"        element={<Works locale={locale} kind="performance"/>}/>
-          <Route path="/works/:slug"  element={<WorkDetail locale={locale} basePath="/works"/>}/>
-          <Route path="/projects"     element={<Works locale={locale} kind="project"/>}/>
+          <Route path="/"               element={<Home locale={locale}/>}/>
+          <Route path="/about"          element={<About locale={locale}/>}/>
+          <Route path="/works"          element={<Works locale={locale} kind="performance"/>}/>
+          <Route path="/works/:slug"    element={<WorkDetail locale={locale} basePath="/works"/>}/>
+          <Route path="/projects"       element={<Works locale={locale} kind="project"/>}/>
           <Route path="/projects/:slug" element={<WorkDetail locale={locale} basePath="/projects"/>}/>
-          <Route path="/lab"          element={<Works locale={locale} kind="lab"/>}/>
-          <Route path="/lab/:slug"    element={<WorkDetail locale={locale} basePath="/lab"/>}/>
-          <Route path="/contacts"     element={<Contacts/>}/>
+          <Route path="/lab"            element={<Works locale={locale} kind="lab"/>}/>
+          <Route path="/lab/:slug"      element={<WorkDetail locale={locale} basePath="/lab"/>}/>
+          <Route path="/contacts"       element={<Contacts/>}/>
         </Routes>
       </motion.div>
     </AnimatePresence>
@@ -60,32 +68,42 @@ function AppInner() {
 
   return (
     <>
-      {/* Global WebGL shader — fixed, all pages */}
-      <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
+      {/* Global WebGL shader — fixed, every page */}
+      <div style={{ position:"fixed", inset:0, zIndex:0, pointerEvents:"none" }}>
         <ShaderBackground/>
       </div>
 
-      {/* Film grain overlay */}
+      {/* Film grain */}
       <Grain/>
 
+      {/* Custom cursor dots */}
       <div id="cursor"/>
       <div id="cursor-ring"/>
 
       <Nav locale={locale} setLocale={handleLocale}/>
 
-      <main style={{ position: "relative", zIndex: 1 }}>
+      <main style={{ position:"relative", zIndex:1 }}>
         <Suspense fallback={null}>
           <AnimatedRoutes locale={locale}/>
         </Suspense>
       </main>
 
       <footer style={{
-        position: "relative", zIndex: 1,
-        textAlign: "center", padding: "3rem 0",
-        borderTop: "1px solid rgba(240,240,240,0.04)",
-        color: "var(--text-3)", fontSize: "0.65rem", letterSpacing: "0.12em",
+        position:"relative", zIndex:1,
+        padding:"3.5rem clamp(1.5rem,3vw,2.5rem)",
+        borderTop:"1px solid rgba(245,240,229,0.045)",
+        display:"flex", justifyContent:"space-between", alignItems:"center",
+        flexWrap:"wrap", gap:"1rem",
       }}>
-        © {new Date().getFullYear()} Варвара Попова
+        <span style={{ color:"var(--text-3)", fontSize:"0.6rem", letterSpacing:"0.12em", fontFamily:"var(--serif)", fontStyle:"italic" }}>
+          Варвара Попова
+        </span>
+        <div style={{ display:"flex", gap:"0.4rem", alignItems:"center" }}>
+          <div style={{ width:1, height:12, background:"var(--accent)", opacity:0.4 }}/>
+          <span style={{ color:"var(--text-3)", fontSize:"0.55rem", letterSpacing:"0.14em" }}>
+            © {new Date().getFullYear()}
+          </span>
+        </div>
       </footer>
     </>
   );

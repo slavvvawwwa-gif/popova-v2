@@ -5,7 +5,7 @@ const VERT = `
   void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
 `;
 
-// Dark flow-field shader — ink bleeding in water, site palette #080808 / #d6303c
+// Velvet Stage — warm golden atmospheric fog, like candlelight in a dark theatre
 const FRAG = `
 precision highp float;
 uniform vec2  uRes;
@@ -18,63 +18,52 @@ float hash(vec2 p) {
 }
 
 float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
+  vec2 i = floor(p); vec2 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
   return mix(
-    mix(hash(i),             hash(i + vec2(1.0, 0.0)), f.x),
-    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
-    f.y
-  );
+    mix(hash(i), hash(i+vec2(1,0)), f.x),
+    mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
 }
 
 float fbm(vec2 p) {
-  float v = 0.0, a = 0.5;
-  mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
-  for (int i = 0; i < 6; i++) {
-    v += a * noise(p);
-    p  = rot * p * 2.1 + vec2(1.7, 9.2);
-    a *= 0.5;
-  }
+  float v=0.0, a=0.5;
+  mat2 rot=mat2(cos(0.5),sin(0.5),-sin(0.5),cos(0.5));
+  for(int i=0;i<5;i++){ v+=a*noise(p); p=rot*p*2.1+vec2(1.7,9.2); a*=0.5; }
   return v;
 }
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uRes;
-  // account for aspect
   vec2 st = uv * vec2(uRes.x / uRes.y, 1.0);
+  float t = uTime * 0.04;
 
-  float t = uTime * 0.055;
+  vec2 q = vec2(fbm(st*1.8 + t*0.5), fbm(st*1.8 + vec2(5.2,1.3) + t*0.4));
+  vec2 r = vec2(fbm(st*1.5 + q*1.2 + vec2(1.7,9.2) + t*0.3), fbm(st*1.5 + q*1.2 + vec2(8.3,2.8) + t*0.25));
+  float f = fbm(st + r * 0.9 + t * 0.15);
 
-  // two-layer flow warp
-  vec2 q = vec2(
-    fbm(st * 2.2 + vec2(0.0, 0.0) + t * 0.4),
-    fbm(st * 2.2 + vec2(5.2, 1.3) + t * 0.35)
-  );
-  vec2 r = vec2(
-    fbm(st * 2.0 + q * 1.4 + vec2(1.7, 9.2) + t * 0.3),
-    fbm(st * 2.0 + q * 1.4 + vec2(8.3, 2.8) + t * 0.25)
-  );
-  float f = fbm(st + r * 1.1 + t * 0.2);
+  // Deep velvet bg
+  vec3 dark   = vec3(0.028, 0.020, 0.040);   // near-black purple-black
+  vec3 mid    = vec3(0.090, 0.055, 0.020);   // dark amber-brown
+  vec3 gold   = vec3(0.830, 0.686, 0.216);   // gold #d4af37
+  vec3 copper = vec3(0.722, 0.451, 0.200);   // copper
 
-  // palette: near-black → dark crimson → faint rose
-  vec3 bg     = vec3(0.031, 0.031, 0.031);  // #080808
-  vec3 accent = vec3(0.839, 0.188, 0.235);  // #d6303c
-  vec3 mid    = vec3(0.10,  0.04,  0.05);
+  vec3 col = mix(dark, mid, clamp(f * 2.2, 0.0, 1.0));
+  col = mix(col, gold * 0.5, clamp(pow(f, 3.0) * 1.4, 0.0, 1.0));
+  col = mix(col, copper * 0.3, clamp(q.y * 0.6, 0.0, 1.0));
 
-  vec3 col = mix(bg, mid, clamp(f * 2.0, 0.0, 1.0));
-  col = mix(col, accent * 0.65, clamp(pow(f, 2.5) * 1.2, 0.0, 1.0));
+  // Warm top glow — like a spotlight from above
+  float topGlow = smoothstep(0.55, 1.0, uv.y) * 0.12;
+  col += gold * topGlow;
 
-  // red bloom — center-bottom where title sits
-  float bloom = 1.0 - smoothstep(0.0, 0.75, length(uv - vec2(0.5, 0.62)));
-  col += accent * bloom * 0.10;
+  // Radial vignette
+  float vig = 1.0 - smoothstep(0.30, 1.10, length(uv - vec2(0.5, 0.55)));
+  col *= vig * 0.88 + 0.12;
 
-  // radial vignette — edges darker
-  float vig = 1.0 - smoothstep(0.38, 1.15, length(uv - vec2(0.5)));
-  col *= vig * 0.92 + 0.08;
+  // Warm center bloom (centre-bottom where hero text sits)
+  float bloom = 1.0 - smoothstep(0.0, 0.65, length(uv - vec2(0.5, 0.58)));
+  col += gold * bloom * 0.07;
 
-  // cinematic-dark but slightly more present
-  col *= 0.62;
+  col *= 0.55;   // cinematic darkness
 
   gl_FragColor = vec4(col, 1.0);
 }
@@ -93,7 +82,6 @@ export default function ShaderBackground() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const gl = canvas.getContext("webgl", { alpha: false, antialias: false });
     if (!gl) return;
 
@@ -103,7 +91,6 @@ export default function ShaderBackground() {
     gl.linkProgram(prog);
     gl.useProgram(prog);
 
-    // Full-screen quad
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
@@ -120,13 +107,11 @@ export default function ShaderBackground() {
     const resize = () => {
       const { clientWidth: w, clientHeight: h } = canvas;
       if (canvas.width !== w || canvas.height !== h) {
-        canvas.width  = w;
-        canvas.height = h;
+        canvas.width = w; canvas.height = h;
         gl.viewport(0, 0, w, h);
       }
       gl.uniform2f(uRes, w, h);
     };
-
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
     resize();
@@ -138,22 +123,10 @@ export default function ShaderBackground() {
     };
     render();
 
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      gl.deleteProgram(prog);
-      gl.deleteBuffer(buf);
-    };
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); gl.deleteProgram(prog); gl.deleteBuffer(buf); };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: "absolute", inset: 0,
-        width: "100%", height: "100%",
-        display: "block", pointerEvents: "none",
-      }}
-    />
+    <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%", display:"block", pointerEvents:"none" }}/>
   );
 }
