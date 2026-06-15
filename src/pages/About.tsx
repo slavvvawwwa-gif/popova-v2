@@ -159,13 +159,13 @@ export default function About({ locale }: { locale: string }) {
         <div className="about-mid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3.5rem", marginBottom: "3.5rem" }}>
           {bio.festivals.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.65 }}>
-              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Фестивали и проекты</p>
+              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Участие в других фестивалях, проектах, лабораториях</p>
               <BioList items={bio.festivals} />
             </motion.div>
           )}
           {bio.education.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.65, delay: 0.08 }}>
-              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Образование</p>
+              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Дополнительное образование</p>
               <BioList items={bio.education} />
             </motion.div>
           )}

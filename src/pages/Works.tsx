@@ -261,7 +261,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
-                gridAutoRows: "min(260px, 20vw)",
+                gridAutoRows: "min(280px, 22vw)",
                 gap: 3,
               }}
             >

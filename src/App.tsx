@@ -1,5 +1,11 @@
 import { Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [pathname]);
+  return null;
+}
 import { AnimatePresence, motion } from "framer-motion";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
@@ -38,6 +44,8 @@ const pageVariants = {
 function AnimatedRoutes({ locale }: { locale: string }) {
   const location = useLocation();
   return (
+    <>
+      <ScrollToTop />
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
@@ -60,6 +68,7 @@ function AnimatedRoutes({ locale }: { locale: string }) {
         </Routes>
       </motion.div>
     </AnimatePresence>
+    </>
   );
 }
 
