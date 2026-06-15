@@ -132,7 +132,7 @@ function AppInner() {
               left: sp.x, top: sp.y,
               width: 220, height: 220,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(212,175,55,0.35) 0%, rgba(184,115,51,0.12) 45%, transparent 70%)",
+              background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent) 0%, color-mix(in srgb, var(--accent-2) 12%, transparent) 45%, transparent 70%)",
               transform: "translate(-50%, -50%)",
               pointerEvents: "none",
               zIndex: 9999,

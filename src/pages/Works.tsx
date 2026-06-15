@@ -43,10 +43,11 @@ function ClickPreview({ url, x, y, visible }: { url: string | null; x: number; y
 }
 
 /* ── Archive row — first click = preview, second click = navigate ── */
-function ArchiveRow({ w, basePath, index, activeSlug, onFirstClick }: {
+function ArchiveRow({ w, basePath, index, activeSlug, onFirstClick, onHide }: {
   w: WorkCard; basePath: string; index: number;
   activeSlug: string | null;
   onFirstClick: (slug: string, url: string | null, x: number, y: number) => void;
+  onHide: () => void;
 }) {
   const navigate  = useNavigate();
   const isActive  = activeSlug === w.slug;
@@ -68,6 +69,7 @@ function ArchiveRow({ w, basePath, index, activeSlug, onFirstClick }: {
     >
       <div
         onClick={handleClick}
+        onMouseLeave={onHide}
         className="arc-row"
         style={{ textDecoration: "none", display: "block", position: "relative", cursor: "pointer" }}
       >
@@ -75,14 +77,14 @@ function ArchiveRow({ w, basePath, index, activeSlug, onFirstClick }: {
           <span style={{ fontFamily: "var(--serif)", fontSize: "0.82rem", color: "var(--text-3)", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
             {w.year}
           </span>
-          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: isActive ? "rgba(212,175,55,0.8)" : "var(--text-1)", lineHeight: 1.1, transition: "color 400ms", minWidth: 0 }}>
+          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: isActive ? "var(--accent)" : "var(--text-1)", lineHeight: 1.1, transition: "color 400ms", minWidth: 0 }}>
             {w.title}
           </span>
           <span className="arc-theatre" style={{ fontSize: "0.6rem", color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
             {w.theatre}
           </span>
         </div>
-        <div className="arc-line" style={{ position: "absolute", bottom: 0, left: 0, height: 1, width: isActive ? "100%" : "0%", background: "rgba(212,175,55,0.45)", transition: "width 550ms var(--ease-soft)" }} />
+        <div className="arc-line" style={{ position: "absolute", bottom: 0, left: 0, height: 1, width: isActive ? "100%" : "0%", background: "var(--accent)", transition: "width 550ms var(--ease-soft)" }} />
       </div>
     </motion.div>
   );
@@ -192,6 +194,8 @@ export default function Works({ locale, kind = "performance" }: { locale: string
     setPreviewVisible(true);
   };
 
+  const handleHide = () => { setActiveSlug(null); setPreviewVisible(false); };
+
   const years   = [...new Set(works.map(w => w.year).filter((y): y is number => y != null))].sort((a, b) => b - a);
   const visible  = years.slice(page * YEAR_WIN, page * YEAR_WIN + YEAR_WIN);
   const filtered = activeYear ? works.filter(w => w.year === activeYear) : works;
@@ -281,6 +285,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
               <ArchiveRow key={w.slug} w={w} basePath={basePath} index={i}
                 activeSlug={activeSlug}
                 onFirstClick={handleFirstClick}
+                onHide={handleHide}
               />
             ))}
           </section>
