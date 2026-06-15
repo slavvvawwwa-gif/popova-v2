@@ -1,0 +1,58 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&display=swap");
+@import "tailwindcss";
+
+:root {
+  --bg: #080808;
+  --surface: #111;
+  --accent: #d6303c;
+  --text-1: #f0f0f0;
+  --text-2: rgba(240,240,240,0.55);
+  --text-3: rgba(240,240,240,0.28);
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --sans: "Inter", system-ui, sans-serif;
+  --ease-expo: cubic-bezier(0.16,1,0.3,1);
+  --ease-soft: cubic-bezier(0.33,1,0.68,1);
+}
+
+@theme inline {
+  --color-accent: var(--accent);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+html.lenis { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+body { overflow-x: hidden; }
+
+::selection { background: var(--accent); color: #fff; }
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); }
+
+.serif { font-family: var(--serif); }
+.eyebrow { font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-2); }
+
+#cursor {
+  position: fixed; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%); transition: transform 0.1s, width .3s var(--ease-soft), height .3s var(--ease-soft);
+}
+#cursor-ring {
+  position: fixed; width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid rgba(240,240,240,0.18); pointer-events: none; z-index: 9998;
+  transform: translate(-50%,-50%); transition: all .5s var(--ease-expo);
+}
+
+.page-enter { opacity: 0; transform: translateY(20px); }
+.page-enter-active { opacity: 1; transform: translateY(0); transition: all 600ms var(--ease-expo); }
+.page-exit { opacity: 1; }
+.page-exit-active { opacity: 0; transition: opacity 300ms; }
