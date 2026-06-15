@@ -6,8 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { getFeatured, type WorkCard } from "@/lib/data";
 import SplineHero from "@/components/three/SplineHero";
 
-// ← Вставь сюда URL своей Spline-сцены (Publish → Embed → scene URL)
-const SPLINE_URL = "";
+const SPLINE_URL = "https://prod.spline.design/i-K3z036BCY1JfuU/scene.splinecode";
 
 gsap.registerPlugin(ScrollTrigger);
 
