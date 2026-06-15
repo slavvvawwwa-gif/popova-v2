@@ -1,14 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { getFeatured, type WorkCard } from "@/lib/data";
-import SplineHero from "@/components/three/SplineHero";
-
-const SPLINE_URL = "https://prod.spline.design/i-K3z036BCY1JfuU/scene.splinecode";
-
-gsap.registerPlugin(ScrollTrigger);
+import ShaderBackground from "@/components/ShaderBackground";
 
 const BENTO = [{c:"col-span-8",r:"row-span-2"},{c:"col-span-4",r:"row-span-2"},{c:"col-span-4",r:"row-span-1"},{c:"col-span-4",r:"row-span-1"},{c:"col-span-4",r:"row-span-1"}];
 const spanFor = (i:number) => BENTO[i%5];
@@ -41,41 +35,22 @@ function FeaturedCard({ w, i }: { w:WorkCard; i:number }) {
 
 export default function Home({ locale }: { locale:string }) {
   const [featured, setFeatured] = useState<WorkCard[]>([]);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const scrollRef = useRef({ current: 0 });
 
   useEffect(() => { getFeatured(locale as "ru"|"en").then(setFeatured); }, [locale]);
-
-  useEffect(() => {
-    if (!titleRef.current) return;
-    gsap.fromTo(titleRef.current.querySelectorAll(".line"),
-      { opacity:0, y:60 }, { opacity:1, y:0, duration:1.2, stagger:0.15, ease:"expo.out", delay:0.2 }
-    );
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => { scrollRef.current.current = window.scrollY; };
-    window.addEventListener("scroll", onScroll, { passive:true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   return (
     <>
       {/* Hero */}
       <section style={{ position:"relative", height:"100svh", display:"flex", alignItems:"center", overflow:"hidden" }}>
-        {/* Spline 3D scene — replaced by SplineHero when URL is set */}
-        {SPLINE_URL
-          ? <SplineHero url={SPLINE_URL}/>
-          : <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 60% 80% at 20% 50%, rgba(214,48,60,0.06) 0%, transparent 70%)" }} aria-hidden="true"/>
-        }
+        <ShaderBackground/>
 
         <div style={{ position:"relative", zIndex:1, padding:"0 clamp(1.5rem,5vw,4rem)", maxWidth:1300, margin:"0 auto", width:"100%" }}>
           <motion.p className="eyebrow" initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.8 }} style={{ marginBottom:"1.5rem" }}>
             Театральный режиссёр
           </motion.p>
-          <h1 ref={titleRef} style={{ fontFamily:"var(--serif)", fontSize:"clamp(4rem,12vw,10rem)", fontWeight:300, lineHeight:0.88, letterSpacing:"-0.025em", color:"var(--text-1)" }}>
-            <span className="line" style={{ display:"block", opacity:0 }}>Варвара</span>
-            <span className="line" style={{ display:"block", opacity:0, fontStyle:"italic", color:"var(--text-2)" }}>Попова</span>
+          <h1 style={{ fontFamily:"var(--serif)", fontSize:"clamp(4rem,12vw,10rem)", fontWeight:300, lineHeight:0.88, letterSpacing:"-0.025em", color:"var(--text-1)" }}>
+            <motion.span initial={{ opacity:0, y:60 }} animate={{ opacity:1, y:0 }} transition={{ duration:1.2, delay:0.2, ease:[0.16,1,0.3,1] }} style={{ display:"block" }}>Варвара</motion.span>
+            <motion.span initial={{ opacity:0, y:60 }} animate={{ opacity:1, y:0 }} transition={{ duration:1.2, delay:0.36, ease:[0.16,1,0.3,1] }} style={{ display:"block", fontStyle:"italic", color:"var(--text-2)" }}>Попова</motion.span>
           </h1>
           <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.8, delay:0.9 }} style={{ marginTop:"3rem", display:"flex", gap:"2rem", flexWrap:"wrap", alignItems:"center" }}>
             <Link to="/works" style={{ display:"inline-flex", alignItems:"center", gap:"0.75rem", textDecoration:"none", fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", color:"var(--text-1)", paddingBottom:"3px", borderBottom:"1px solid var(--accent)" }}>
