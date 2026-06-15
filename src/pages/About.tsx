@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PortableText } from "@portabletext/react";
 import { getBio, type BioData } from "@/lib/data";
@@ -7,30 +7,27 @@ import { getBio, type BioData } from "@/lib/data";
 function PhotoStack({ photos }: { photos: { url: string | null; alt: string }[] }) {
   const [active, setActive] = useState(0);
   const [dir,    setDir]    = useState(1);
-  const busy = useState(false);
-  // busy[0] = animating lock, busy[1] = setter
+  // useRef for the lock — always current, immune to stale closure / batching issues
+  const lockRef = useRef(false);
 
   if (!photos.length) return null;
 
   const rotations = [0, -4, 3.5, -2.5, 4.5];
+  const n = photos.length;
 
-  const go = (d: number) => {
-    if (busy[0]) return;
-    busy[1](true);
-    setDir(d);
-    setActive(a => d > 0
-      ? (a < photos.length - 1 ? a + 1 : 0)
-      : (a > 0 ? a - 1 : photos.length - 1)
-    );
-    setTimeout(() => busy[1](false), 480);
-  };
-
-  // Single click handler — check which half of the stack was tapped
+  // Single click handler — checks which horizontal half was tapped
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
+    if (lockRef.current) return;   // block while animation is running
+    lockRef.current = true;
+
     const rect = e.currentTarget.getBoundingClientRect();
-    const relX = e.clientX - rect.left;
-    go(relX < rect.width * 0.45 ? -1 : 1);
+    const d = (e.clientX - rect.left) < rect.width * 0.45 ? -1 : 1;
+
+    setDir(d);
+    setActive(a => d > 0 ? (a < n - 1 ? a + 1 : 0) : (a > 0 ? a - 1 : n - 1));
+
+    setTimeout(() => { lockRef.current = false; }, 500);
   };
 
   return (

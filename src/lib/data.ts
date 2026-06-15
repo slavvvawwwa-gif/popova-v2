@@ -176,10 +176,15 @@ export async function getContacts() {
   );
 }
 
-// Issue #12: site-wide theme from Sanity (hue 0-360)
+// Site-wide theme: reads themeColor (color-input plugin) and extracts HSL hue
 export async function getSiteTheme(): Promise<{hue:number}|null> {
   return client
-    .fetch<{themeHue:number}|null>(`*[_type=="siteSettings"][0]{themeHue}`)
-    .then(r => (r?.themeHue != null ? { hue: r.themeHue } : null))
+    .fetch<{themeColor?: {hsl?: {h?: number}}}|null>(
+      `*[_type=="siteSettings"][0]{themeColor}`
+    )
+    .then(r => {
+      const h = r?.themeColor?.hsl?.h;
+      return (h != null && isFinite(h)) ? { hue: Math.round(h) } : null;
+    })
     .catch(() => null);
 }
