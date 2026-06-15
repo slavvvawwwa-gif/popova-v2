@@ -62,19 +62,19 @@ void main() {
   vec3 accent = vec3(0.839, 0.188, 0.235);  // #d6303c
   vec3 mid    = vec3(0.10,  0.04,  0.05);
 
-  vec3 col = mix(bg, mid, clamp(f * 1.8, 0.0, 1.0));
-  col = mix(col, accent * 0.55, clamp(pow(f, 2.8) * 1.1, 0.0, 1.0));
+  vec3 col = mix(bg, mid, clamp(f * 2.0, 0.0, 1.0));
+  col = mix(col, accent * 0.65, clamp(pow(f, 2.5) * 1.2, 0.0, 1.0));
 
-  // subtle red bloom bottom-left (where hero title lives)
-  float bloom = 1.0 - smoothstep(0.0, 0.65, length(uv - vec2(0.18, 0.58)));
-  col += accent * bloom * 0.07;
+  // red bloom — center-bottom where title sits
+  float bloom = 1.0 - smoothstep(0.0, 0.75, length(uv - vec2(0.5, 0.62)));
+  col += accent * bloom * 0.10;
 
-  // radial vignette
-  float vig = 1.0 - smoothstep(0.35, 1.1, length(uv - vec2(0.5)));
-  col *= vig * 0.95 + 0.05;
+  // radial vignette — edges darker
+  float vig = 1.0 - smoothstep(0.38, 1.15, length(uv - vec2(0.5)));
+  col *= vig * 0.92 + 0.08;
 
-  // keep it cinematic-dark
-  col *= 0.55;
+  // cinematic-dark but slightly more present
+  col *= 0.62;
 
   gl_FragColor = vec4(col, 1.0);
 }
