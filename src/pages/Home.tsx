@@ -235,10 +235,11 @@ export default function Home({ locale }: { locale: string }) {
 
       </section>
 
-      {/* ── Featured works — Issue #1: reduced top padding ── */}
+      {/* ── Featured works ── */}
       {featured.length > 0 && (
-        <section style={{ padding: "4rem clamp(1.5rem,3vw,2.5rem) 5rem", maxWidth: 1600, margin: "0 auto", width: "100%" }}>
+        <section className="feat-section" style={{ padding: "4rem clamp(1.5rem,3vw,2.5rem) 5rem", maxWidth: 1600, margin: "0 auto", width: "100%" }}>
           <motion.div
+            className="feat-header"
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -263,6 +264,7 @@ export default function Home({ locale }: { locale: string }) {
           </div>
 
           <motion.div
+            className="feat-more"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -286,7 +288,10 @@ export default function Home({ locale }: { locale: string }) {
         .feat-link:hover .feat-corner { width: 32px !important; height: 32px !important; }
         .feat-link:hover .feat-arrow { opacity: 1 !important; }
         @media(max-width:699px) {
-          .feat-grid { grid-template-columns: 1fr !important; grid-auto-rows: 68vw !important; }
+          .feat-section { padding-left: 0 !important; padding-right: 0 !important; }
+          .feat-header  { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+          .feat-more    { padding-right: 1.25rem !important; }
+          .feat-grid { grid-template-columns: 1fr !important; grid-auto-rows: 68vw !important; gap: 0 !important; }
           .feat-grid > * { grid-column: span 1 !important; grid-row: span 1 !important; }
         }
       `}</style>
