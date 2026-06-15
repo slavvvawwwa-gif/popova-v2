@@ -7,17 +7,37 @@ import { getBio, type BioData } from "@/lib/data";
 function PhotoStack({ photos }: { photos: { url: string | null; alt: string }[] }) {
   const [active, setActive] = useState(0);
   const [dir,    setDir]    = useState(1);
+  const busy = useState(false);
+  // busy[0] = animating lock, busy[1] = setter
 
   if (!photos.length) return null;
 
   const rotations = [0, -4, 3.5, -2.5, 4.5];
 
-  const prev = () => { setDir(-1); setActive(a => (a > 0 ? a - 1 : photos.length - 1)); };
-  const next = () => { setDir(1);  setActive(a => (a < photos.length - 1 ? a + 1 : 0)); };
+  const go = (d: number) => {
+    if (busy[0]) return;
+    busy[1](true);
+    setDir(d);
+    setActive(a => d > 0
+      ? (a < photos.length - 1 ? a + 1 : 0)
+      : (a > 0 ? a - 1 : photos.length - 1)
+    );
+    setTimeout(() => busy[1](false), 480);
+  };
+
+  // Single click handler — check which half of the stack was tapped
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relX = e.clientX - rect.left;
+    go(relX < rect.width * 0.45 ? -1 : 1);
+  };
 
   return (
-    <div style={{ position: "relative", width: "100%", aspectRatio: "3/4" }}>
-
+    <div
+      onClick={photos.length > 1 ? handleClick : undefined}
+      style={{ position: "relative", width: "100%", aspectRatio: "3/4", cursor: photos.length > 1 ? "pointer" : "default" }}
+    >
       {/* Background stacked cards */}
       {photos.map((p, i) => {
         if (!p.url) return null;
@@ -30,7 +50,8 @@ function PhotoStack({ photos }: { photos: { url: string | null; alt: string }[] 
             transform: `rotate(${rot}deg) scale(${1 - order * 0.018})`,
             transformOrigin: "bottom center",
             zIndex: photos.length - order,
-            transition: "transform 0.5s var(--ease-expo)",
+            transition: "transform 0.5s ease",
+            pointerEvents: "none",
           }}>
             <img src={p.url} alt={p.alt}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -44,15 +65,15 @@ function PhotoStack({ photos }: { photos: { url: string | null; alt: string }[] 
           key={active}
           custom={dir}
           variants={{
-            initial: (d: number) => ({ opacity: 0, x: `${d > 0 ? 12 : -12}%`, rotate: d > 0 ? 2 : -2 }),
+            initial: (d: number) => ({ opacity: 0, x: `${d > 0 ? 10 : -10}%`, rotate: d > 0 ? 1.5 : -1.5 }),
             animate: { opacity: 1, x: 0, rotate: 0 },
-            exit:    (d: number) => ({ opacity: 0, x: `${d > 0 ? -12 : 12}%`, rotate: d > 0 ? -2 : 2 }),
+            exit:    (d: number) => ({ opacity: 0, x: `${d > 0 ? -10 : 10}%`, rotate: d > 0 ? -1.5 : 1.5 }),
           }}
           initial="initial"
           animate="animate"
           exit="exit"
           transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-          style={{ position: "absolute", inset: 0, zIndex: photos.length + 1 }}
+          style={{ position: "absolute", inset: 0, zIndex: photos.length + 1, pointerEvents: "none" }}
         >
           {photos[active].url && (
             <img src={photos[active].url!} alt={photos[active].alt}
@@ -61,19 +82,11 @@ function PhotoStack({ photos }: { photos: { url: string | null; alt: string }[] 
         </motion.div>
       </AnimatePresence>
 
-      {/* Invisible left / right tap zones */}
+      {/* Counter */}
       {photos.length > 1 && (
-        <>
-          <button onClick={prev} aria-label="Предыдущее" className="stack-nav-btn"
-            style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "40%", background: "none", border: "none", cursor: "pointer", zIndex: photos.length + 2 }} />
-          <button onClick={next} aria-label="Следующее"  className="stack-nav-btn"
-            style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "60%", background: "none", border: "none", cursor: "pointer", zIndex: photos.length + 2 }} />
-
-          {/* Counter */}
-          <div style={{ position: "absolute", bottom: "1rem", right: "1rem", background: "rgba(7,5,10,0.65)", color: "var(--text-2)", fontSize: "0.52rem", letterSpacing: "0.15em", padding: "0.3rem 0.6rem", zIndex: photos.length + 3, pointerEvents: "none" }}>
-            {active + 1} / {photos.length}
-          </div>
-        </>
+        <div style={{ position: "absolute", bottom: "1rem", right: "1rem", background: "rgba(7,5,10,0.65)", color: "var(--text-2)", fontSize: "0.52rem", letterSpacing: "0.15em", padding: "0.3rem 0.6rem", zIndex: photos.length + 2, pointerEvents: "none" }}>
+          {active + 1} / {photos.length}
+        </div>
       )}
     </div>
   );
@@ -189,12 +202,12 @@ export default function About({ locale }: { locale: string }) {
               transition={{ duration: 0.45, delay: i * 0.05 }}
               style={{ padding: "1rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)" }}
             >
-              <p style={{ color: "var(--text-2)", fontSize: "0.9rem", lineHeight: 1.75, marginBottom: l.from ? "0.4rem" : 0 }}>
+              <p style={{ color: "var(--text-2)", fontSize: "0.9rem", lineHeight: 1.75, marginBottom: l.period ? "0.4rem" : 0 }}>
                 {l.description}
               </p>
-              {l.from && (
+              {l.period && (
                 <p style={{ color: "var(--text-3)", fontSize: "0.68rem", letterSpacing: "0.07em", fontStyle: "italic" }}>
-                  — {l.from}{l.period ? `, ${l.period}` : ""}
+                  {l.period}
                 </p>
               )}
             </motion.div>

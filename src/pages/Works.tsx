@@ -204,10 +204,10 @@ export default function Works({ locale, kind = "performance" }: { locale: string
     <>
       <ClickPreview url={previewUrl} x={previewPos.x} y={previewPos.y} visible={previewVisible} />
 
-      <div style={{ maxWidth: 1600, margin: "0 auto", padding: "5rem clamp(1.5rem,3vw,2.5rem) 3rem" }}>
+      <div className="works-outer" style={{ maxWidth: 1600, margin: "0 auto", padding: "5rem clamp(1.5rem,3vw,2.5rem) 3rem" }}>
 
         {/* Header */}
-        <header style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: "1.5rem", marginBottom: "2.5rem" }}>
+        <header className="works-header" style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: "1.5rem", marginBottom: "2.5rem" }}>
           <div>
             <motion.div
               initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
@@ -245,6 +245,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
 
         {/* Separator */}
         <motion.div
+          className="works-sep"
           initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
           transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
           style={{ height: 1, background: "rgba(245,240,229,0.07)", marginBottom: "2rem", transformOrigin: "left" }}
@@ -254,7 +255,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
         {current.length > 0 && (
           <section style={{ marginBottom: "3rem" }}>
             {kind === "performance" && (
-              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Текущий репертуар</p>
+              <p className="eyebrow works-labels" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Текущий репертуар</p>
             )}
             <div
               className="works-grid"
@@ -272,7 +273,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
 
         {/* Archive */}
         {archive.length > 0 && (
-          <section>
+          <section className="works-archive">
             {current.length > 0 && (
               <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Архив</p>
             )}
@@ -291,8 +292,13 @@ export default function Works({ locale, kind = "performance" }: { locale: string
         .cur-card:hover .cur-img { transform: scale(1.06); }
         .cur-card:hover .cur-corner { width: 28px !important; height: 28px !important; }
         @media(max-width:699px) {
-          .works-grid { grid-template-columns: 1fr !important; grid-auto-rows: 66vw !important; }
+          .works-grid { grid-template-columns: 1fr !important; grid-auto-rows: 66vw !important; gap: 0 !important; }
           .works-grid > * { grid-column: span 1 !important; grid-row: span 1 !important; }
+          .works-outer { padding-left: 0 !important; padding-right: 0 !important; }
+          .works-header { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+          .works-sep { margin-left: 1.25rem !important; margin-right: 1.25rem !important; }
+          .works-labels { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
+          .works-archive { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
         }
       `}</style>
     </>

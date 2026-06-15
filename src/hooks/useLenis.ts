@@ -12,3 +12,11 @@ export function useLenis() {
   }, []);
   return lenis;
 }
+
+export function scrollToTop() {
+  if (lenis) {
+    lenis.scrollTo(0, { immediate: true });
+  } else {
+    window.scrollTo(0, 0);
+  }
+}

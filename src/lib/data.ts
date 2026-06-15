@@ -140,13 +140,13 @@ export interface BioData {
   text: unknown[]|null;
   festivals: { period:string; description:string }[];
   education: { period:string; description:string }[];
-  thankYouLetters: { period:string; description:string; from:string }[];
+  thankYouLetters: { period:string; description:string }[];
   cvRu: string|null; cvEn: string|null;
 }
 
 export async function getBio(locale: Locale = "ru"): Promise<BioData|null> {
   const r = await client.fetch<Record<string,unknown>|null>(
-    `*[_type=="bio"][0]{name_ru,name_en,role_ru,role_en,photo,gallery[]{asset,alt},bio_text_ru,bio_text_en,festivals[]{period,description_ru,description_en},education[]{period,description_ru,description_en},thank_you_letters[]{period,description_ru,description_en,from_ru,from_en},"cvRu":cv_file_ru.asset->url,"cvEn":cv_file_en.asset->url}`
+    `*[_type=="bio"][0]{name_ru,name_en,role_ru,role_en,photo,gallery[]{asset,alt},bio_text_ru,bio_text_en,festivals[]{period,description_ru,description_en},education[]{period,description_ru,description_en},letters[]{period,description_ru,description_en},"cvRu":cv_file_ru.asset->url,"cvEn":cv_file_en.asset->url}`
   );
   if (!r) return null;
   const mapP = (arr: unknown) =>
@@ -155,7 +155,6 @@ export async function getBio(locale: Locale = "ru"): Promise<BioData|null> {
     asArr<Record<string,unknown>>(arr).map(e => ({
       period:      (e.period as string) ?? "",
       description: pick(e, "description", locale),
-      from:        pick(e, "from", locale),
     }));
   return {
     name: pick(r,"name",locale),
@@ -165,7 +164,7 @@ export async function getBio(locale: Locale = "ru"): Promise<BioData|null> {
     text: locale==="en" ? (r.bio_text_en as unknown[]|null) ?? (r.bio_text_ru as unknown[]|null) : (r.bio_text_ru as unknown[]|null),
     festivals:       mapP(r.festivals),
     education:       mapP(r.education),
-    thankYouLetters: mapL(r.thank_you_letters),
+    thankYouLetters: mapL(r.letters),
     cvRu: (r.cvRu as string) ?? null,
     cvEn: (r.cvEn as string) ?? null,
   };
