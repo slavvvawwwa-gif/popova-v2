@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import { getPerformances, type WorkCard } from "@/lib/data";
+import ScrambleText from "@/components/ui/ScrambleText";
+import { useDistort } from "@/hooks/useDistort";
 
 const YEAR_WIN = 5;
 
@@ -99,6 +101,16 @@ function CurrentCard({ w, basePath, i }: { w: WorkCard; basePath: string; i: num
   const srx   = useSpring(rx, { stiffness: 180, damping: 28 });
   const sry   = useSpring(ry, { stiffness: 180, damping: 28 });
 
+  // Dynamic shadow
+  const shX  = useMotionValue(0);
+  const shY  = useMotionValue(0);
+  const sShX = useSpring(shX, { stiffness: 90, damping: 22 });
+  const sShY = useSpring(shY, { stiffness: 90, damping: 22 });
+  const cardShadow = useMotionTemplate`${sShX}px ${sShY}px 55px rgba(0,0,0,0.60), 0 0 0 1px rgba(245,240,229,0.05)`;
+
+  // Distortion on image
+  const distortRef = useDistort<HTMLAnchorElement>();
+
   return (
     <motion.div
       ref={ref}
@@ -108,14 +120,17 @@ function CurrentCard({ w, basePath, i }: { w: WorkCard; basePath: string; i: num
       transition={{ duration: 0.75, delay: (i % 5) * 0.07, ease: [0.16, 1, 0.3, 1] }}
       onMouseMove={e => {
         const r = ref.current!.getBoundingClientRect();
-        rx.set(((e.clientY - r.top)  / r.height - 0.5) * 10);
-        ry.set(-((e.clientX - r.left) / r.width  - 0.5) * 10);
+        const cx = (e.clientX - r.left) / r.width  - 0.5;
+        const cy = (e.clientY - r.top)  / r.height - 0.5;
+        rx.set(cy * 10); ry.set(-cx * 10);
+        shX.set(-cx * 42); shY.set(-cy * 30);
       }}
-      onMouseLeave={() => { rx.set(0); ry.set(0); }}
-      style={{ perspective: 900, gridColumn: `span ${bento.cols}`, gridRow: `span ${bento.rows}` }}
+      onMouseLeave={() => { rx.set(0); ry.set(0); shX.set(0); shY.set(0); }}
+      style={{ perspective: 900, gridColumn: `span ${bento.cols}`, gridRow: `span ${bento.rows}`, boxShadow: cardShadow }}
     >
       <motion.div style={{ rotateX: srx, rotateY: sry, width: "100%", height: "100%" }}>
         <Link
+          ref={distortRef}
           to={`${basePath}/${w.slug}`}
           style={{ display: "block", textDecoration: "none", position: "relative", overflow: "hidden", width: "100%", height: "100%", background: "var(--surface)" }}
           className="cur-card"
@@ -223,7 +238,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
               transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
               style={{ fontFamily: "var(--serif)", fontSize: "clamp(2.8rem,7vw,5.5rem)", fontWeight: 300, color: "var(--text-1)", letterSpacing: "-0.025em" }}
             >
-              {title}
+              <ScrambleText text={title} />
             </motion.h1>
           </div>
 

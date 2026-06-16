@@ -80,13 +80,22 @@ type Splash = { id: number; x: number; y: number };
 function AppInner() {
   const [locale, setLocale]   = useState("ru");
   const [splashes, setSplashes] = useState<Splash[]>([]);
-  const [hue, setHue]         = useState(45);
+  const [hue, setHue] = useState(() => {
+    const stored = localStorage.getItem("siteHue");
+    const h = stored ? Number(stored) : 45;
+    applyTheme(h);
+    return h;
+  });
   useLenis();
   useCursor();
 
   useEffect(() => {
     getSiteTheme().then(t => {
-      if (t) { applyTheme(t.hue); setHue(t.hue); }
+      if (t) {
+        applyTheme(t.hue);
+        setHue(t.hue);
+        localStorage.setItem("siteHue", String(t.hue));
+      }
     });
   }, []);
 

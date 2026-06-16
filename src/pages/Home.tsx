@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion, useMotionValue, useSpring, useScroll, useTransform, useMotionTemplate } from "framer-motion";
 import { getFeatured, type WorkCard } from "@/lib/data";
 import CharReveal from "@/components/ui/CharReveal";
+import ScrambleText from "@/components/ui/ScrambleText";
 import ThreeHero from "@/components/three/ThreeHero";
+import { useDistort } from "@/hooks/useDistort";
 
 /* ── Liquid-fill letter (В / П): fills gold from bottom on hover ── */
 function LiquidLetter({
@@ -56,12 +58,27 @@ function FeaturedCard({ w, i }: { w: WorkCard; i: number }) {
   const srx   = useSpring(rx, { stiffness: 180, damping: 28 });
   const sry   = useSpring(ry, { stiffness: 180, damping: 28 });
 
+  // Dynamic shadow — shifts opposite to cursor (light-source illusion)
+  const shX  = useMotionValue(0);
+  const shY  = useMotionValue(0);
+  const sShX = useSpring(shX, { stiffness: 90, damping: 22 });
+  const sShY = useSpring(shY, { stiffness: 90, damping: 22 });
+  const cardShadow = useMotionTemplate`${sShX}px ${sShY}px 55px rgba(0,0,0,0.60), 0 0 0 1px rgba(245,240,229,0.05)`;
+
+  // SVG displacement distortion on hover
+  const distortRef = useDistort<HTMLAnchorElement>();
+
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = ref.current!.getBoundingClientRect();
-    rx.set(((e.clientY - r.top)  / r.height - 0.5) * 12);
-    ry.set(-((e.clientX - r.left) / r.width  - 0.5) * 12);
+    const cx = (e.clientX - r.left) / r.width  - 0.5;
+    const cy = (e.clientY - r.top)  / r.height - 0.5;
+    rx.set(cy * 12); ry.set(-cx * 12);
+    shX.set(-cx * 42); shY.set(-cy * 30);
   };
-  const onLeave = () => { rx.set(0); ry.set(0); };
+  const onLeave = () => {
+    rx.set(0); ry.set(0);
+    shX.set(0); shY.set(0);
+  };
 
   return (
     <motion.div
@@ -76,10 +93,12 @@ function FeaturedCard({ w, i }: { w: WorkCard; i: number }) {
         perspective: 900,
         gridColumn: `span ${bento.cols}`,
         gridRow:    `span ${bento.rows}`,
+        boxShadow: cardShadow,
       }}
     >
       <motion.div style={{ rotateX: srx, rotateY: sry, width: "100%", height: "100%" }}>
         <Link
+          ref={distortRef}
           to={`${path}/${w.slug}`}
           style={{ display: "block", textDecoration: "none", position: "relative", overflow: "hidden", width: "100%", height: "100%", background: "var(--surface)" }}
           className="feat-link"
@@ -125,6 +144,10 @@ export default function Home({ locale }: { locale: string }) {
   const smX       = useSpring(mouseX, { stiffness: 40, damping: 18 });
   const smY       = useSpring(mouseY, { stiffness: 40, damping: 18 });
 
+  // Scroll parallax for hero content
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 700], [0, -160]);
+
   useEffect(() => { getFeatured(locale as "ru"|"en").then(setFeatured); }, [locale]);
 
   const onMouseMove = (e: React.MouseEvent) => {
@@ -152,63 +175,68 @@ export default function Home({ locale }: { locale: string }) {
           x: smX, y: smY,
         }}/>
 
-        {/* Eyebrow */}
-        <motion.p
-          className="eyebrow"
-          initial={{ opacity: 0, letterSpacing: "0.38em" }}
-          animate={{ opacity: 1, letterSpacing: "0.24em" }}
-          transition={{ duration: 1.4, delay: 0.1 }}
-          style={{ marginBottom: "3.5rem", position: "relative", zIndex: 2, color: "var(--accent)", opacity: 0.6 }}
-        >
-          Театральный режиссёр
-        </motion.p>
-
-        {/* Main title — В and П get liquid fill effect */}
-        <div style={{ position: "relative", zIndex: 2, textAlign: "center", lineHeight: 0.82, userSelect: "none" }}>
-          <motion.div style={{ x: smX, y: smY, display: "block" }}>
-            <h1 style={{ fontFamily: "var(--serif)", fontWeight: 300, letterSpacing: "-0.03em", margin: 0 }}>
-              <span style={{ display: "block", fontSize: "clamp(5.5rem,15vw,14rem)", color: "var(--text-1)" }}>
-                <LiquidLetter char="В" delay={0.3} baseColor="var(--text-1)" />
-                <CharReveal text="арвара" delay={0.3 + 0.05} stagger={0.05} />
-              </span>
-              <span style={{ display: "block", fontSize: "clamp(4.5rem,12vw,11rem)", color: "rgba(245,240,229,0.28)", fontStyle: "italic" }}>
-                <LiquidLetter char="П" delay={0.6} baseColor="rgba(245,240,229,0.28)" />
-                <CharReveal text="опова" delay={0.6 + 0.045} stagger={0.045} style={{ color: "rgba(245,240,229,0.28)", fontStyle: "italic" }} />
-              </span>
-            </h1>
-          </motion.div>
-        </div>
-
-        {/* Gold divider */}
+        {/* Parallax wrapper — content drifts up slower than scroll */}
         <motion.div
-          initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          transition={{ duration: 1.6, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
-          style={{ width: "clamp(80px,14vw,160px)", height: 1, background: "linear-gradient(90deg, transparent, var(--accent), transparent)", margin: "3rem auto", transformOrigin: "center", position: "relative", zIndex: 2 }}
-        />
-
-        {/* CTAs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 1.4 }}
-          style={{ display: "flex", gap: "3.5rem", alignItems: "center", position: "relative", zIndex: 2 }}
+          style={{ y: heroY, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 2, width: "100%" }}
         >
-          <Link to="/works" style={{ fontSize: "0.58rem", letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--text-1)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.85rem", paddingBottom: 4, borderBottom: "1px solid var(--accent)" }}>
-            Спектакли
-            <svg width="18" height="9" viewBox="0 0 18 9" fill="none">
-              <path d="M0 4.5h16M12 1.5l4 3-4 3" stroke="currentColor" strokeWidth="0.9"/>
-            </svg>
-          </Link>
-          <Link to="/about" style={{ fontSize: "0.58rem", letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--text-3)", textDecoration: "none", transition: "color 300ms" }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "var(--text-2)"}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "var(--text-3)"}
+          {/* Eyebrow */}
+          <motion.p
+            className="eyebrow"
+            initial={{ opacity: 0, letterSpacing: "0.38em" }}
+            animate={{ opacity: 1, letterSpacing: "0.24em" }}
+            transition={{ duration: 1.4, delay: 0.1 }}
+            style={{ marginBottom: "3.5rem", color: "var(--accent)", opacity: 0.6 }}
           >
-            Обо мне
-          </Link>
+            Театральный режиссёр
+          </motion.p>
+
+          {/* Main title */}
+          <div style={{ textAlign: "center", lineHeight: 0.82, userSelect: "none" }}>
+            <motion.div style={{ x: smX, y: smY, display: "block" }}>
+              <h1 style={{ fontFamily: "var(--serif)", fontWeight: 300, letterSpacing: "-0.03em", margin: 0 }}>
+                <span style={{ display: "block", fontSize: "clamp(5.5rem,15vw,14rem)", color: "var(--text-1)" }}>
+                  <LiquidLetter char="В" delay={0.3} baseColor="var(--text-1)" />
+                  <CharReveal text="арвара" delay={0.3 + 0.05} stagger={0.05} />
+                </span>
+                <span style={{ display: "block", fontSize: "clamp(4.5rem,12vw,11rem)", color: "rgba(245,240,229,0.28)", fontStyle: "italic" }}>
+                  <LiquidLetter char="П" delay={0.6} baseColor="rgba(245,240,229,0.28)" />
+                  <CharReveal text="опова" delay={0.6 + 0.045} stagger={0.045} style={{ color: "rgba(245,240,229,0.28)", fontStyle: "italic" }} />
+                </span>
+              </h1>
+            </motion.div>
+          </div>
+
+          {/* Gold divider */}
+          <motion.div
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ duration: 1.6, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
+            style={{ width: "clamp(80px,14vw,160px)", height: 1, background: "linear-gradient(90deg, transparent, var(--accent), transparent)", margin: "3rem auto", transformOrigin: "center" }}
+          />
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 1.4 }}
+            style={{ display: "flex", gap: "3.5rem", alignItems: "center" }}
+          >
+            <Link to="/works" style={{ fontSize: "0.58rem", letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--text-1)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.85rem", paddingBottom: 4, borderBottom: "1px solid var(--accent)" }}>
+              Спектакли
+              <svg width="18" height="9" viewBox="0 0 18 9" fill="none">
+                <path d="M0 4.5h16M12 1.5l4 3-4 3" stroke="currentColor" strokeWidth="0.9"/>
+              </svg>
+            </Link>
+            <Link to="/about" style={{ fontSize: "0.58rem", letterSpacing: "0.24em", textTransform: "uppercase", color: "var(--text-3)", textDecoration: "none", transition: "color 300ms" }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "var(--text-2)"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "var(--text-3)"}
+            >
+              Обо мне
+            </Link>
+          </motion.div>
         </motion.div>
 
-        {/* Scroll indicator */}
+        {/* Scroll indicator — stays at bottom, outside parallax */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -247,7 +275,7 @@ export default function Home({ locale }: { locale: string }) {
             style={{ display: "flex", alignItems: "center", gap: "2rem", marginBottom: "2.5rem" }}
           >
             <div style={{ width: 1, height: 40, background: "var(--accent)", opacity: 0.55 }}/>
-            <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.65 }}>Избранное</span>
+            <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.65 }}><ScrambleText text="Избранное" /></span>
             <div style={{ flex: 1, height: 1, background: "rgba(245,240,229,0.05)" }}/>
           </motion.div>
 
