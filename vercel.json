@@ -1,15 +1,3 @@
 {
-  "redirects": [
-    {
-      "source": "/studio",
-      "destination": "https://popova-cms.vercel.app/studio",
-      "permanent": false
-    },
-    {
-      "source": "/studio/(.*)",
-      "destination": "https://popova-cms.vercel.app/studio/$1",
-      "permanent": false
-    }
-  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
