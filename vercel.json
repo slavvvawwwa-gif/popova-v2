@@ -1,3 +1,15 @@
 {
+  "redirects": [
+    {
+      "source": "/studio",
+      "destination": "https://popova-studio.sanity.studio",
+      "permanent": false
+    },
+    {
+      "source": "/studio/(.*)",
+      "destination": "https://popova-studio.sanity.studio/$1",
+      "permanent": false
+    }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
