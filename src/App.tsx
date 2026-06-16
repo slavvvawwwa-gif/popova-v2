@@ -73,13 +73,8 @@ function AnimatedRoutes({ locale }: { locale: string }) {
   );
 }
 
-/* ── Global click fog splashes ── */
-let splashId = 0;
-type Splash = { id: number; x: number; y: number };
-
 function AppInner() {
-  const [locale, setLocale]   = useState("ru");
-  const [splashes, setSplashes] = useState<Splash[]>([]);
+  const [locale, setLocale] = useState("ru");
   const [hue, setHue] = useState(() => {
     const stored = localStorage.getItem("siteHue");
     const h = stored ? Number(stored) : 45;
@@ -99,19 +94,10 @@ function AppInner() {
     });
   }, []);
 
-  // Global background click fog — fires on any non-interactive element
-  const handleGlobalClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = e.target as HTMLElement;
-    if (el.closest("a, button, input, textarea, select, [role=button]")) return;
-    const id = ++splashId;
-    setSplashes(s => [...s, { id, x: e.clientX, y: e.clientY }]);
-    setTimeout(() => setSplashes(s => s.filter(sp => sp.id !== id)), 1400);
-  };
-
   const handleLocale = (l: string) => { setLocale(l); i18n.changeLanguage(l); };
 
   return (
-    <div onClick={handleGlobalClick} style={{ minHeight: "100svh" }}>
+    <div style={{ minHeight: "100svh" }}>
       {/* Global WebGL shader — fixed, every page */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
         <ShaderBackground hue={hue} />
@@ -126,30 +112,6 @@ function AppInner() {
       {/* Custom cursor */}
       <div id="cursor" />
       <div id="cursor-ring" />
-
-      {/* Global splash container — fixed so position follows viewport */}
-      <AnimatePresence>
-        {splashes.map(sp => (
-          <motion.div
-            key={sp.id}
-            initial={{ opacity: 0.45, scale: 0 }}
-            animate={{ opacity: 0, scale: 4.5 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              position: "fixed",
-              left: sp.x, top: sp.y,
-              width: 220, height: 220,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent) 0%, color-mix(in srgb, var(--accent-2) 12%, transparent) 45%, transparent 70%)",
-              transform: "translate(-50%, -50%)",
-              pointerEvents: "none",
-              zIndex: 9999,
-              filter: "blur(18px)",
-            }}
-          />
-        ))}
-      </AnimatePresence>
 
       <Nav locale={locale} setLocale={handleLocale} />
 

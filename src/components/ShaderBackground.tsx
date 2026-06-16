@@ -83,7 +83,7 @@ void main() {
   vec2 uvAR    = uv    * vec2(uRes.x / uRes.y, 1.0);
   vec2 mouseAR = uMouse * vec2(uRes.x / uRes.y, 1.0);
   float mDist  = length(uvAR - mouseAR);
-  float mGlow  = smoothstep(0.50, 0.0, mDist);
+  float mGlow  = smoothstep(1.00, 0.0, mDist);
   col += glow * mGlow * 0.10;
   col *= 1.0 + mGlow * 0.10;
 

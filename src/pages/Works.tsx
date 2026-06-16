@@ -3,8 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import { getPerformances, type WorkCard } from "@/lib/data";
 import ScrambleText from "@/components/ui/ScrambleText";
-import { useDistort } from "@/hooks/useDistort";
-
 const YEAR_WIN = 5;
 
 const BENTO = [
@@ -108,9 +106,6 @@ function CurrentCard({ w, basePath, i }: { w: WorkCard; basePath: string; i: num
   const sShY = useSpring(shY, { stiffness: 90, damping: 22 });
   const cardShadow = useMotionTemplate`${sShX}px ${sShY}px 55px rgba(0,0,0,0.60), 0 0 0 1px rgba(245,240,229,0.05)`;
 
-  // Distortion on image
-  const distortRef = useDistort<HTMLAnchorElement>();
-
   return (
     <motion.div
       ref={ref}
@@ -130,7 +125,6 @@ function CurrentCard({ w, basePath, i }: { w: WorkCard; basePath: string; i: num
     >
       <motion.div style={{ rotateX: srx, rotateY: sry, width: "100%", height: "100%" }}>
         <Link
-          ref={distortRef}
           to={`${basePath}/${w.slug}`}
           style={{ display: "block", textDecoration: "none", position: "relative", overflow: "hidden", width: "100%", height: "100%", background: "var(--surface)" }}
           className="cur-card"
@@ -156,6 +150,8 @@ function CurrentCard({ w, basePath, i }: { w: WorkCard; basePath: string; i: num
             )}
           </div>
           <div className="cur-corner" style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "2px solid var(--accent)", borderLeft: "2px solid var(--accent)", transition: "width 380ms var(--ease-soft), height 380ms var(--ease-soft)" }} />
+          {/* Soft sheen sweep on hover */}
+          <div className="card-sheen" />
         </Link>
       </motion.div>
     </motion.div>
@@ -311,6 +307,8 @@ export default function Works({ locale, kind = "performance" }: { locale: string
         .cur-img { transition: transform 750ms var(--ease-expo); }
         .cur-card:hover .cur-img { transform: scale(1.06); }
         .cur-card:hover .cur-corner { width: 28px !important; height: 28px !important; }
+        .card-sheen { position:absolute;top:0;bottom:0;left:0;width:60%;z-index:5;pointer-events:none;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.07) 50%,transparent 100%);transform:translateX(-120%) skewX(-12deg); }
+        .cur-card:hover .card-sheen { transform:translateX(220%) skewX(-12deg);transition:transform 0.85s cubic-bezier(0.16,1,0.3,1); }
         @media(max-width:699px) {
           .works-grid { grid-template-columns: 1fr !important; grid-auto-rows: 66vw !important; gap: 0 !important; }
           .works-grid > * { grid-column: span 1 !important; grid-row: span 1 !important; }

@@ -5,8 +5,6 @@ import { getFeatured, type WorkCard } from "@/lib/data";
 import CharReveal from "@/components/ui/CharReveal";
 import ScrambleText from "@/components/ui/ScrambleText";
 import ThreeHero from "@/components/three/ThreeHero";
-import { useDistort } from "@/hooks/useDistort";
-
 /* ── Liquid-fill letter (В / П): fills gold from bottom on hover ── */
 function LiquidLetter({
   char, delay, baseColor,
@@ -65,9 +63,6 @@ function FeaturedCard({ w, i }: { w: WorkCard; i: number }) {
   const sShY = useSpring(shY, { stiffness: 90, damping: 22 });
   const cardShadow = useMotionTemplate`${sShX}px ${sShY}px 55px rgba(0,0,0,0.60), 0 0 0 1px rgba(245,240,229,0.05)`;
 
-  // SVG displacement distortion on hover
-  const distortRef = useDistort<HTMLAnchorElement>();
-
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = ref.current!.getBoundingClientRect();
     const cx = (e.clientX - r.left) / r.width  - 0.5;
@@ -98,7 +93,6 @@ function FeaturedCard({ w, i }: { w: WorkCard; i: number }) {
     >
       <motion.div style={{ rotateX: srx, rotateY: sry, width: "100%", height: "100%" }}>
         <Link
-          ref={distortRef}
           to={`${path}/${w.slug}`}
           style={{ display: "block", textDecoration: "none", position: "relative", overflow: "hidden", width: "100%", height: "100%", background: "var(--surface)" }}
           className="feat-link"
@@ -128,6 +122,8 @@ function FeaturedCard({ w, i }: { w: WorkCard; i: number }) {
           <div style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "2px solid var(--accent)", borderLeft: "2px solid var(--accent)", transition: "width 380ms var(--ease-soft), height 380ms var(--ease-soft)" }} className="feat-corner"/>
           {/* Arrow */}
           <div style={{ position: "absolute", top: "1.2rem", right: "1.2rem", opacity: 0, transition: "opacity 300ms", fontSize: "0.9rem", color: "var(--accent)" }} className="feat-arrow">↗</div>
+          {/* Soft sheen sweep on hover */}
+          <div className="card-sheen" />
         </Link>
       </motion.div>
     </motion.div>
@@ -315,6 +311,8 @@ export default function Home({ locale }: { locale: string }) {
         .feat-link:hover .feat-img { transform: scale(1.07); }
         .feat-link:hover .feat-corner { width: 32px !important; height: 32px !important; }
         .feat-link:hover .feat-arrow { opacity: 1 !important; }
+        .card-sheen { position:absolute;top:0;bottom:0;left:0;width:60%;z-index:5;pointer-events:none;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.07) 50%,transparent 100%);transform:translateX(-120%) skewX(-12deg); }
+        .feat-link:hover .card-sheen,.cur-card:hover .card-sheen { transform:translateX(220%) skewX(-12deg);transition:transform 0.85s cubic-bezier(0.16,1,0.3,1); }
         @media(max-width:699px) {
           .feat-section { padding-left: 0 !important; padding-right: 0 !important; }
           .feat-header  { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
