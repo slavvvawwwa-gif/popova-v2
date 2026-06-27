@@ -173,7 +173,7 @@ export default function ShaderBackground({ hue = 45 }: { hue?: number }) {
       gl.uniform2f(uMouseL, mouseRef.current.x, mouseRef.current.y);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
-    render();
+    raf = requestAnimationFrame(render);
 
     return () => {
       cancelAnimationFrame(raf);
