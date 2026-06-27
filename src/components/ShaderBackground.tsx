@@ -29,17 +29,17 @@ float gnoise(vec2 p) {
     u.y) * 0.5 + 0.5;
 }
 
-float fbm7(vec2 p) {
-  float v=0.0,a=0.5; mat2 r=mat2(0.80,0.60,-0.60,0.80);
-  for(int i=0;i<7;i++){v+=a*gnoise(p);p=r*p*2.07+vec2(1.7,9.2);a*=0.50;} return v;
-}
-float fbm5(vec2 p) {
-  float v=0.0,a=0.5; mat2 r=mat2(0.80,0.60,-0.60,0.80);
-  for(int i=0;i<5;i++){v+=a*gnoise(p);p=r*p*2.07+vec2(1.7,9.2);a*=0.50;} return v;
-}
 float fbm4(vec2 p) {
   float v=0.0,a=0.5; mat2 r=mat2(0.80,0.60,-0.60,0.80);
-  for(int i=0;i<4;i++){v+=a*gnoise(p);p=r*p*2.07+vec2(5.3,2.8);a*=0.50;} return v;
+  for(int i=0;i<4;i++){v+=a*gnoise(p);p=r*p*2.07+vec2(1.7,9.2);a*=0.50;} return v;
+}
+float fbm3(vec2 p) {
+  float v=0.0,a=0.5; mat2 r=mat2(0.80,0.60,-0.60,0.80);
+  for(int i=0;i<3;i++){v+=a*gnoise(p);p=r*p*2.07+vec2(1.7,9.2);a*=0.50;} return v;
+}
+float fbm2(vec2 p) {
+  float v=0.0,a=0.5; mat2 r=mat2(0.80,0.60,-0.60,0.80);
+  for(int i=0;i<2;i++){v+=a*gnoise(p);p=r*p*2.07+vec2(5.3,2.8);a*=0.50;} return v;
 }
 
 vec3 hsl2rgb(float h, float s, float l) {
@@ -53,12 +53,12 @@ void main() {
   vec2 st = uv * vec2(uRes.x / uRes.y, 1.0);
   float t  = uTime * 0.022;
 
-  vec2 q0 = vec2(fbm5(st*1.0 + t*0.20), fbm5(st*1.0 + vec2(5.2,1.3) + t*0.18));
-  float bg  = fbm7(st*1.1 + q0*1.8 + t*0.10);
+  vec2 q0 = vec2(fbm3(st*1.0 + t*0.20), fbm3(st*1.0 + vec2(5.2,1.3) + t*0.18));
+  float bg  = fbm4(st*1.1 + q0*1.8 + t*0.10);
 
-  vec2 q1 = vec2(fbm5(st*1.9 + t*0.35), fbm5(st*1.9 + vec2(3.7,8.1) + t*0.28));
-  float mid  = fbm5(st*1.6 + q1*1.3 + t*0.18);
-  float wisp = fbm4(st*4.2 + q1*0.7 + t*0.55);
+  vec2 q1 = vec2(fbm3(st*1.9 + t*0.35), fbm3(st*1.9 + vec2(3.7,8.1) + t*0.28));
+  float mid  = fbm3(st*1.6 + q1*1.3 + t*0.18);
+  float wisp = fbm2(st*4.2 + q1*0.7 + t*0.55);
   float cloud = bg*0.50 + mid*0.35 + wisp*0.15;
 
   float heightFade = smoothstep(0.0, 1.3, uv.y + bg*0.3);
@@ -136,6 +136,8 @@ export default function ShaderBackground({ hue = 45 }: { hue?: number }) {
     const uMouseL = gl.getUniformLocation(prog, "uMouse");
 
     let raf = 0;
+    let lastFrame = 0;
+    const FRAME_MS = 1000 / 30; // throttle to 30fps
     const start = performance.now();
 
     const resize = () => {
@@ -159,15 +161,17 @@ export default function ShaderBackground({ hue = 45 }: { hue?: number }) {
     };
     window.addEventListener("mousemove", onMouse, { passive: true });
 
-    const render = () => {
-      // Lerp hue toward target — smooth ~1.5s transition
+    const render = (now: number) => {
+      raf = requestAnimationFrame(render);
+      if (now - lastFrame < FRAME_MS) return;
+      lastFrame = now;
+
       currentHueRef.current += (hueRef.current - currentHueRef.current) * 0.03;
 
-      gl.uniform1f(uTime,  (performance.now() - start) / 1000);
+      gl.uniform1f(uTime,  (now - start) / 1000);
       gl.uniform1f(uHueL,  currentHueRef.current);
       gl.uniform2f(uMouseL, mouseRef.current.x, mouseRef.current.y);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      raf = requestAnimationFrame(render);
     };
     render();
 

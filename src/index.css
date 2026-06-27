@@ -91,7 +91,7 @@ body { overflow-x: hidden; }
 .gallery-scroll-item:hover img { transform: scale(1.04); }
 
 /* Page transitions */
-.page-wrap { will-change: clip-path, opacity; }
+.page-wrap { will-change: opacity, transform; }
 
 /* Issue #10: hide custom cursor on touch devices */
 @media (pointer: coarse) {
