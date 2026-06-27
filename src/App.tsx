@@ -1,27 +1,31 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import StudioPage from "@/pages/StudioPage";
+import { AnimatePresence, motion } from "framer-motion";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/i18n";
+import { useLenis } from "@/hooks/useLenis";
+import { useCursor } from "@/hooks/useCursor";
 import { scrollToTop } from "@/hooks/useLenis";
+import Nav from "@/components/ui/Nav";
+import ShaderBackground from "@/components/ShaderBackground";
+import Grain from "@/components/ui/Grain";
+import { getSiteTheme } from "@/lib/data";
+
+// Lazy-load Studio — keeps 6 MB Sanity bundle out of the main chunk
+const StudioPage = lazy(() => import("@/pages/StudioPage"));
+
+// Lazy-load all pages — parallel fetching, smaller initial bundle
+const Home      = lazy(() => import("@/pages/Home"));
+const Works     = lazy(() => import("@/pages/Works"));
+const About     = lazy(() => import("@/pages/About"));
+const Contacts  = lazy(() => import("@/pages/Contacts"));
+const WorkDetail = lazy(() => import("@/pages/WorkDetail"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { scrollToTop(); }, [pathname]);
   return null;
 }
-import { AnimatePresence, motion } from "framer-motion";
-import { I18nextProvider } from "react-i18next";
-import i18n from "@/i18n";
-import { useLenis } from "@/hooks/useLenis";
-import { useCursor } from "@/hooks/useCursor";
-import Nav from "@/components/ui/Nav";
-import Home from "@/pages/Home";
-import Works from "@/pages/Works";
-import About from "@/pages/About";
-import Contacts from "@/pages/Contacts";
-import WorkDetail from "@/pages/WorkDetail";
-import ShaderBackground from "@/components/ShaderBackground";
-import Grain from "@/components/ui/Grain";
-import { getSiteTheme } from "@/lib/data";
 
 function applyTheme(hue: number) {
   const root = document.documentElement;
@@ -38,9 +42,9 @@ function applyTheme(hue: number) {
 }
 
 const pageVariants = {
-  initial: { opacity: 0, clipPath: "inset(0 0 100% 0)" },
-  enter:   { opacity: 1, clipPath: "inset(0 0 0% 0)",   transition: { duration: 0.72, ease: [0.76, 0, 0.24, 1] } },
-  exit:    { opacity: 0,                                 transition: { duration: 0.20 } },
+  initial: { opacity: 0, y: 12 },
+  enter:   { opacity: 1, y: 0,  transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } },
+  exit:    { opacity: 0,        transition: { duration: 0.15 } },
 } as const;
 
 function AnimatedRoutes({ locale }: { locale: string }) {
