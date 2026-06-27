@@ -4,7 +4,7 @@ import { motion, useMotionValue, useSpring, useScroll, useTransform, useMotionTe
 import { getFeatured, getHome, type WorkCard, type HomeData } from "@/lib/data";
 import CharReveal from "@/components/ui/CharReveal";
 import ScrambleText from "@/components/ui/ScrambleText";
-import ThreeHero from "@/components/three/ThreeHero";
+import CSSHeroFrames from "@/components/CSSHeroFrames";
 /* ── Liquid-fill letter (В / П): fills gold from bottom on hover ── */
 function LiquidLetter({
   char, delay, baseColor,
@@ -134,8 +134,6 @@ export default function Home({ locale }: { locale: string }) {
   const [featured, setFeatured] = useState<WorkCard[]>([]);
   const [home, setHome] = useState<HomeData>({ label: "", name: "", tagline: "" });
   const heroRef   = useRef<HTMLDivElement>(null);
-  const mouseXRef = useRef(0);
-  const mouseYRef = useRef(0);
   const mouseX    = useMotionValue(0);
   const mouseY    = useMotionValue(0);
   const smX       = useSpring(mouseX, { stiffness: 40, damping: 18 });
@@ -156,7 +154,6 @@ export default function Home({ locale }: { locale: string }) {
     const dx = (e.clientX - r.left - r.width  / 2) / r.width  * 40;
     const dy = (e.clientY - r.top  - r.height / 2) / r.height * 25;
     mouseX.set(dx); mouseY.set(dy);
-    mouseXRef.current = dx; mouseYRef.current = dy;
   };
 
   return (
@@ -167,7 +164,7 @@ export default function Home({ locale }: { locale: string }) {
         onMouseMove={onMouseMove}
         style={{ position: "relative", height: "100svh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" }}
       >
-        <ThreeHero mouseX={mouseXRef} mouseY={mouseYRef} />
+        <CSSHeroFrames />
 
         {/* Mouse-track glow */}
         <motion.div style={{
