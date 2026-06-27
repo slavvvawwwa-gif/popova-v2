@@ -170,10 +170,18 @@ export async function getBio(locale: Locale = "ru"): Promise<BioData|null> {
   };
 }
 
-export async function getContacts() {
-  return client.fetch<{email:string;social_links:{platform:string;url:string;handle:string}[]}|null>(
-    `*[_type=="contacts"][0]{email,social_links[]{platform,url,handle}}`
+export interface ContactsData {
+  email: string | null;
+  telegram: string | null;
+  vk: string | null;
+  max: string | null;
+}
+
+export async function getContacts(): Promise<ContactsData> {
+  const r = await client.fetch<ContactsData | null>(
+    `*[_type=="contacts"][0]{email,telegram,vk,max}`
   );
+  return r ?? { email: null, telegram: null, vk: null, max: null };
 }
 
 // Site-wide theme: reads themeColor (color-input plugin) and extracts HSL hue
