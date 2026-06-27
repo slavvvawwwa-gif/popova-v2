@@ -28,14 +28,29 @@ export default function Contacts() {
       )}
 
       {(data?.social_links ?? []).length > 0 && (
-        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }} style={{ display:"flex", gap:"2rem", flexWrap:"wrap" }}>
+        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }} style={{ display:"flex", flexDirection:"column", gap:"1.25rem" }}>
           {(data?.social_links ?? []).map(s => (
             <a key={s.platform} href={s.url} target="_blank" rel="noopener noreferrer"
-              style={{ fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", color:"var(--text-2)", textDecoration:"none" }}
-              onMouseEnter={e=>(e.currentTarget as HTMLElement).style.color="var(--text-1)"}
-              onMouseLeave={e=>(e.currentTarget as HTMLElement).style.color="var(--text-2)"}
+              style={{ display:"flex", alignItems:"baseline", gap:"0.75rem", textDecoration:"none", width:"fit-content" }}
+              onMouseEnter={e=>{
+                const el = e.currentTarget as HTMLElement;
+                el.querySelectorAll<HTMLElement>("[data-label]").forEach(n => n.style.color="var(--text-1)");
+                el.querySelectorAll<HTMLElement>("[data-handle]").forEach(n => n.style.color="var(--accent)");
+              }}
+              onMouseLeave={e=>{
+                const el = e.currentTarget as HTMLElement;
+                el.querySelectorAll<HTMLElement>("[data-label]").forEach(n => n.style.color="var(--text-2)");
+                el.querySelectorAll<HTMLElement>("[data-handle]").forEach(n => n.style.color="var(--text-2)");
+              }}
             >
-              {s.platform}
+              <span data-label style={{ fontSize:"0.7rem", letterSpacing:"0.18em", textTransform:"uppercase", color:"var(--text-2)", transition:"color 0.2s" }}>
+                {s.platform}
+              </span>
+              {s.handle && (
+                <span data-handle style={{ fontSize:"0.85rem", color:"var(--text-2)", transition:"color 0.2s" }}>
+                  {s.handle}
+                </span>
+              )}
             </a>
           ))}
         </motion.div>

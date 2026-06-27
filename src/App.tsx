@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import StudioPage from "@/pages/StudioPage";
 import { scrollToTop } from "@/hooks/useLenis";
 
 function ScrollToTop() {
@@ -145,7 +146,10 @@ export default function App() {
   return (
     <I18nextProvider i18n={i18n}>
       <BrowserRouter>
-        <AppInner />
+        <Routes>
+          <Route path="/studio/*" element={<StudioPage />} />
+          <Route path="/*" element={<AppInner />} />
+        </Routes>
       </BrowserRouter>
     </I18nextProvider>
   );

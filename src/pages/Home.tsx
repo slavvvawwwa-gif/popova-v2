@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useMotionValue, useSpring, useScroll, useTransform, useMotionTemplate } from "framer-motion";
-import { getFeatured, type WorkCard } from "@/lib/data";
+import { getFeatured, getHome, type WorkCard, type HomeData } from "@/lib/data";
 import CharReveal from "@/components/ui/CharReveal";
 import ScrambleText from "@/components/ui/ScrambleText";
 import ThreeHero from "@/components/three/ThreeHero";
@@ -132,6 +132,7 @@ function FeaturedCard({ w, i }: { w: WorkCard; i: number }) {
 
 export default function Home({ locale }: { locale: string }) {
   const [featured, setFeatured] = useState<WorkCard[]>([]);
+  const [home, setHome] = useState<HomeData>({ label: "", name: "", tagline: "" });
   const heroRef   = useRef<HTMLDivElement>(null);
   const mouseXRef = useRef(0);
   const mouseYRef = useRef(0);
@@ -144,7 +145,11 @@ export default function Home({ locale }: { locale: string }) {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 700], [0, -160]);
 
-  useEffect(() => { getFeatured(locale as "ru"|"en").then(setFeatured); }, [locale]);
+  useEffect(() => {
+    const l = locale as "ru" | "en";
+    getFeatured(l).then(setFeatured);
+    getHome(l).then(setHome);
+  }, [locale]);
 
   const onMouseMove = (e: React.MouseEvent) => {
     const r = heroRef.current!.getBoundingClientRect();
@@ -183,21 +188,25 @@ export default function Home({ locale }: { locale: string }) {
             transition={{ duration: 1.4, delay: 0.1 }}
             style={{ marginBottom: "3.5rem", color: "var(--accent)", opacity: 0.6 }}
           >
-            Театральный режиссёр
+            {home.label}
           </motion.p>
 
-          {/* Main title */}
+          {/* Main title — split "Имя Фамилия" into two animated lines */}
           <div style={{ textAlign: "center", lineHeight: 0.82, userSelect: "none" }}>
             <motion.div style={{ x: smX, y: smY, display: "block" }}>
               <h1 style={{ fontFamily: "var(--serif)", fontWeight: 300, letterSpacing: "-0.03em", margin: 0 }}>
-                <span style={{ display: "block", fontSize: "clamp(5.5rem,15vw,14rem)", color: "var(--text-1)" }}>
-                  <LiquidLetter char="В" delay={0.3} baseColor="var(--text-1)" />
-                  <CharReveal text="арвара" delay={0.3 + 0.05} stagger={0.05} />
-                </span>
-                <span style={{ display: "block", fontSize: "clamp(4.5rem,12vw,11rem)", color: "rgba(245,240,229,0.28)", fontStyle: "italic" }}>
-                  <LiquidLetter char="П" delay={0.6} baseColor="rgba(245,240,229,0.28)" />
-                  <CharReveal text="опова" delay={0.6 + 0.045} stagger={0.045} style={{ color: "rgba(245,240,229,0.28)", fontStyle: "italic" }} />
-                </span>
+                {home.name.split(" ").map((word, i) => (
+                  <span key={i} style={{
+                    display: "block",
+                    fontSize: i === 0 ? "clamp(5.5rem,15vw,14rem)" : "clamp(4.5rem,12vw,11rem)",
+                    color: i === 0 ? "var(--text-1)" : "rgba(245,240,229,0.28)",
+                    fontStyle: i === 0 ? "normal" : "italic",
+                  }}>
+                    <LiquidLetter char={word[0]} delay={0.3 + i * 0.3} baseColor={i === 0 ? "var(--text-1)" : "rgba(245,240,229,0.28)"} />
+                    <CharReveal text={word.slice(1)} delay={0.3 + i * 0.3 + 0.05} stagger={0.05}
+                      style={i === 0 ? undefined : { color: "rgba(245,240,229,0.28)", fontStyle: "italic" }} />
+                  </span>
+                ))}
               </h1>
             </motion.div>
           </div>

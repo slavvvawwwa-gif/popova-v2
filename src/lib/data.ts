@@ -188,3 +188,20 @@ export async function getSiteTheme(): Promise<{hue:number}|null> {
     })
     .catch(() => null);
 }
+
+export interface HomeData {
+  label: string;
+  name: string;
+  tagline: string;
+}
+
+export async function getHome(locale: Locale = "ru"): Promise<HomeData> {
+  const r = await client.fetch<Record<string, unknown> | null>(
+    `*[_type=="home"][0]{hero_label_ru,hero_label_en,hero_name_ru,hero_name_en,hero_tagline_ru,hero_tagline_en}`
+  );
+  return {
+    label:   pick(r ?? {}, "hero_label",   locale) || "Театральный режиссёр",
+    name:    pick(r ?? {}, "hero_name",    locale) || "Варвара Попова",
+    tagline: pick(r ?? {}, "hero_tagline", locale) || "",
+  };
+}
