@@ -10,4 +10,6 @@ export const client = createClient({
 
 const builder = imageUrlBuilder(client);
 export const urlFor = (source: unknown) =>
-  builder.image(source as Parameters<typeof builder.image>[0]).auto("format").fit("max");
+  source
+    ? builder.image(source as Parameters<typeof builder.image>[0]).auto("format").fit("max")
+    : null;

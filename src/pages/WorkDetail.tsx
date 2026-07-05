@@ -70,13 +70,22 @@ function BentoGallery({ images, label, onOpen }: {
 
 export default function WorkDetail({ locale, basePath = "/works" }: { locale: string; basePath?: string }) {
   const { slug } = useParams<{ slug: string }>();
-  const [work, setWork] = useState<WD | null>(null);
-  const [lb, setLb]     = useState<number | null>(null);
+  const [work, setWork]   = useState<WD | null>(null);
+  const [error, setError] = useState(false);
+  const [lb, setLb]       = useState<number | null>(null);
 
   useEffect(() => {
-    if (slug) getPerformance(slug, locale as "ru" | "en").then(setWork);
+    setWork(null); setError(false);
+    if (slug) getPerformance(slug, locale as "ru" | "en")
+      .then(data => data ? setWork(data) : setError(true))
+      .catch(() => setError(true));
   }, [slug, locale]);
 
+  if (error) return (
+    <div style={{ height: "100svh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.5 }}>Не найдено</span>
+    </div>
+  );
   if (!work) return (
     <div style={{ height: "100svh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.5 }}>Загрузка…</span>
