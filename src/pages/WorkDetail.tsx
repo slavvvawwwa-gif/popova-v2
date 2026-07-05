@@ -135,7 +135,7 @@ export default function WorkDetail({ locale, basePath = "/works" }: { locale: st
           <p className="eyebrow" style={{ marginBottom: "1rem", color: "var(--accent)", opacity: 0.65 }}>
             {work.theatre}{work.year ? ` · ${work.year}` : ""}
           </p>
-          <h1 style={{ fontFamily: "var(--serif)", fontSize: "clamp(2.5rem,7.5vw,7rem)", fontWeight: 300, lineHeight: 0.9, color: "var(--text-1)", letterSpacing: "-0.02em" }}>
+          <h1 style={{ fontFamily: "var(--serif)", fontSize: "clamp(2rem,5.5vw,5.5rem)", fontWeight: 300, lineHeight: 1, color: "var(--text-1)", letterSpacing: "-0.02em", overflowWrap: "break-word" }}>
             {work.title}
           </h1>
           {work.shortDescription && (
