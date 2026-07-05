@@ -14,9 +14,8 @@ const BENTO = [
 ];
 const bentoFor = (i: number) => BENTO[i % 5];
 
-/* ── Hover-following floating preview ── */
-/* Wrapper always in DOM — position updated via ref (no re-render on mousemove) */
-function HoverPreview({ divRef, url, visible }: {
+/* ── Click preview: fixed at click position ── */
+function ClickPreview({ divRef, url, visible }: {
   divRef: React.RefObject<HTMLDivElement | null>;
   url: string | null;
   visible: boolean;
@@ -26,7 +25,7 @@ function HoverPreview({ divRef, url, visible }: {
       ref={divRef}
       style={{
         position: "fixed", left: 0, top: 0,
-        width: 180, height: 240,
+        width: 200, height: 265,
         transform: "translateY(-50%)",
         zIndex: 200, pointerEvents: "none", overflow: "hidden",
       }}
@@ -50,13 +49,21 @@ function HoverPreview({ divRef, url, visible }: {
   );
 }
 
-/* ── Archive row — hover = preview, click = navigate ── */
-function ArchiveRow({ w, basePath, index, onHover, onMove, onLeave }: {
+/* ── Archive row: 1st click = preview, 2nd click = navigate ── */
+function ArchiveRow({ w, basePath, index, active, onFirstClick, onSecondClick }: {
   w: WorkCard; basePath: string; index: number;
-  onHover: (url: string | null, x: number, y: number) => void;
-  onMove:  (x: number, y: number) => void;
-  onLeave: () => void;
+  active: boolean;
+  onFirstClick: (url: string | null, x: number, y: number) => void;
+  onSecondClick: () => void;
 }) {
+  const handleClick = (e: React.MouseEvent) => {
+    if (active) {
+      onSecondClick();
+    } else {
+      onFirstClick(w.previewUrl ?? w.coverUrl, e.clientX, e.clientY);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -24 }}
@@ -67,16 +74,13 @@ function ArchiveRow({ w, basePath, index, onHover, onMove, onLeave }: {
       <div
         className="arc-row"
         style={{ textDecoration: "none", display: "block", position: "relative", cursor: "pointer" }}
-        onMouseEnter={e => onHover(w.previewUrl ?? w.coverUrl, e.clientX, e.clientY)}
-        onMouseMove={e  => onMove(e.clientX, e.clientY)}
-        onMouseLeave={onLeave}
-        onClick={() => window.location.assign(`${basePath}/${w.slug}`)}
+        onClick={handleClick}
       >
-        <div className="arc-inner" style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)" }}>
+        <div className="arc-inner" style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: `1px solid ${active ? "rgba(212,175,55,0.15)" : "rgba(245,240,229,0.04)"}` }}>
           <span style={{ fontFamily: "var(--serif)", fontSize: "0.82rem", color: "var(--text-3)", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
             {w.year}
           </span>
-          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: "var(--text-1)", lineHeight: 1.2, transition: "color 400ms", minWidth: 0, overflowWrap: "break-word", wordBreak: "break-word" }}>
+          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: active ? "var(--accent)" : "var(--text-1)", lineHeight: 1.2, transition: "color 300ms", minWidth: 0, overflowWrap: "break-word", wordBreak: "break-word" }}>
             {w.title}
           </span>
           <span className="arc-theatre" style={{ fontSize: "0.6rem", color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
@@ -174,30 +178,40 @@ export default function Works({ locale, kind = "performance" }: { locale: string
   const [works, setWorks]           = useState<WorkCard[]>([]);
   const [activeYear, setActiveYear] = useState<number | null>(null);
   const [page, setPage]             = useState(0);
+  const [activeSlug,     setActiveSlug]     = useState<string | null>(null);
   const [previewUrl,     setPreviewUrl]     = useState<string | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getPerformances(locale as "ru" | "en", kind).then(setWorks);
-    setActiveYear(null); setPage(0); setPreviewVisible(false);
+    setActiveYear(null); setPage(0); setActiveSlug(null); setPreviewVisible(false);
   }, [locale, kind]);
 
-  const handleHover = (url: string | null, x: number, y: number) => {
+  // Dismiss preview on outside click
+  useEffect(() => {
+    if (!activeSlug) return;
+    const dismiss = (e: MouseEvent) => {
+      if (!(e.target as Element).closest(".arc-row")) {
+        setActiveSlug(null); setPreviewVisible(false);
+      }
+    };
+    document.addEventListener("click", dismiss);
+    return () => document.removeEventListener("click", dismiss);
+  }, [activeSlug]);
+
+  const handleFirstClick = (slug: string, url: string | null, x: number, y: number) => {
     if (previewRef.current) {
-      previewRef.current.style.left = `${x + 20}px`;
+      previewRef.current.style.left = `${x + 24}px`;
       previewRef.current.style.top  = `${y}px`;
     }
     setPreviewUrl(url);
+    setActiveSlug(slug);
     setPreviewVisible(true);
   };
-  const handleMove = (x: number, y: number) => {
-    if (previewRef.current) {
-      previewRef.current.style.left = `${x + 20}px`;
-      previewRef.current.style.top  = `${y}px`;
-    }
+  const handleSecondClick = (slug: string, basePath: string) => {
+    window.location.assign(`${basePath}/${slug}`);
   };
-  const handleLeave = () => setPreviewVisible(false);
 
   const years   = [...new Set(works.map(w => w.year).filter((y): y is number => y != null))].sort((a, b) => b - a);
   const visible  = years.slice(page * YEAR_WIN, page * YEAR_WIN + YEAR_WIN);
@@ -209,7 +223,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
 
   return (
     <>
-      <HoverPreview divRef={previewRef} url={previewUrl} visible={previewVisible} />
+      <ClickPreview divRef={previewRef} url={previewUrl} visible={previewVisible} />
 
       <div className="works-outer" style={{ maxWidth: 1600, margin: "0 auto", padding: "5rem clamp(1.5rem,3vw,2.5rem) 3rem" }}>
 
@@ -286,9 +300,9 @@ export default function Works({ locale, kind = "performance" }: { locale: string
             )}
             {archive.map((w, i) => (
               <ArchiveRow key={w.slug} w={w} basePath={basePath} index={i}
-                onHover={handleHover}
-                onMove={handleMove}
-                onLeave={handleLeave}
+                active={activeSlug === w.slug}
+                onFirstClick={(url, x, y) => handleFirstClick(w.slug, url, x, y)}
+                onSecondClick={() => handleSecondClick(w.slug, basePath)}
               />
             ))}
           </section>
