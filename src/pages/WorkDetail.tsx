@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { PortableText } from "@portabletext/react";
@@ -240,8 +241,9 @@ export default function WorkDetail({ locale, basePath = "/works" }: { locale: st
 
       <div style={{ height: "5rem" }} />
 
-      {/* Lightbox */}
-      <AnimatePresence>
+      {/* Lightbox — portal to body so position:fixed is relative to viewport, not transformed ancestor */}
+      {createPortal(
+        <AnimatePresence>
         {lb !== null && (() => {
           const cur = allImgs[lb];
           if (!cur) return null;
@@ -251,7 +253,7 @@ export default function WorkDetail({ locale, basePath = "/works" }: { locale: st
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.22 }}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.97)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.97)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
               onClick={() => setLb(null)}
             >
               <motion.img
@@ -288,7 +290,9 @@ export default function WorkDetail({ locale, basePath = "/works" }: { locale: st
             </motion.div>
           );
         })()}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       <style>{`
         .gal-img { transition: transform 700ms var(--ease-expo); }

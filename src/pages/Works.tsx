@@ -50,8 +50,8 @@ function ClickPreview({ divRef, url, visible }: {
 }
 
 /* ── Archive row: 1st click = preview, 2nd click = navigate ── */
-function ArchiveRow({ w, basePath, index, active, onFirstClick, onSecondClick }: {
-  w: WorkCard; basePath: string; index: number;
+function ArchiveRow({ w, index, active, onFirstClick, onSecondClick }: {
+  w: WorkCard; index: number;
   active: boolean;
   onFirstClick: (url: string | null, x: number, y: number) => void;
   onSecondClick: () => void;
@@ -299,7 +299,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
               <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Архив</p>
             )}
             {archive.map((w, i) => (
-              <ArchiveRow key={w.slug} w={w} basePath={basePath} index={i}
+              <ArchiveRow key={w.slug} w={w} index={i}
                 active={activeSlug === w.slug}
                 onFirstClick={(url, x, y) => handleFirstClick(w.slug, url, x, y)}
                 onSecondClick={() => handleSecondClick(w.slug, basePath)}
