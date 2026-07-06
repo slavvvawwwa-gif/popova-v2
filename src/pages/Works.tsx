@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import { getPerformances, type WorkCard } from "@/lib/data";
@@ -223,7 +224,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
 
   return (
     <>
-      <ClickPreview divRef={previewRef} url={previewUrl} visible={previewVisible} />
+      {createPortal(<ClickPreview divRef={previewRef} url={previewUrl} visible={previewVisible} />, document.body)}
 
       <div className="works-outer" style={{ maxWidth: 1600, margin: "0 auto", padding: "5rem clamp(1.5rem,3vw,2.5rem) 3rem" }}>
 
