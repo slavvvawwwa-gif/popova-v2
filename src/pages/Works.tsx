@@ -50,12 +50,22 @@ function ClickPreview({ divRef, url, visible }: {
   );
 }
 
-/* ── Archive row: hover = preview, click = navigate ── */
-function ArchiveRow({ w, basePath, index, onEnter, onLeave }: {
-  w: WorkCard; basePath: string; index: number;
-  onEnter: (url: string | null, x: number, y: number) => void;
+/* ── Archive row: 1st click = preview, 2nd click = navigate, leave = dismiss ── */
+function ArchiveRow({ w, index, active, onFirstClick, onSecondClick, onLeave }: {
+  w: WorkCard; index: number;
+  active: boolean;
+  onFirstClick: (url: string | null, x: number, y: number) => void;
+  onSecondClick: () => void;
   onLeave: () => void;
 }) {
+  const handleClick = (e: React.MouseEvent) => {
+    if (active) {
+      onSecondClick();
+    } else {
+      onFirstClick(w.previewUrl ?? w.coverUrl, e.clientX, e.clientY);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -24 }}
@@ -66,15 +76,14 @@ function ArchiveRow({ w, basePath, index, onEnter, onLeave }: {
       <div
         className="arc-row"
         style={{ textDecoration: "none", display: "block", position: "relative", cursor: "pointer" }}
-        onMouseEnter={e => onEnter(w.previewUrl ?? w.coverUrl, e.clientX, e.clientY)}
+        onClick={handleClick}
         onMouseLeave={onLeave}
-        onClick={() => window.location.assign(`${basePath}/${w.slug}`)}
       >
-        <div className="arc-inner" style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)" }}>
+        <div className="arc-inner" style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: `1px solid ${active ? "rgba(212,175,55,0.15)" : "rgba(245,240,229,0.04)"}` }}>
           <span style={{ fontFamily: "var(--serif)", fontSize: "0.82rem", color: "var(--text-3)", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
             {w.year}
           </span>
-          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: "var(--text-1)", lineHeight: 1.2, transition: "color 300ms", minWidth: 0, overflowWrap: "break-word", wordBreak: "break-word" }}>
+          <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: active ? "var(--accent)" : "var(--text-1)", lineHeight: 1.2, transition: "color 300ms", minWidth: 0, overflowWrap: "break-word", wordBreak: "break-word" }}>
             {w.title}
           </span>
           <span className="arc-theatre" style={{ fontSize: "0.6rem", color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
@@ -172,24 +181,41 @@ export default function Works({ locale, kind = "performance" }: { locale: string
   const [works, setWorks]           = useState<WorkCard[]>([]);
   const [activeYear, setActiveYear] = useState<number | null>(null);
   const [page, setPage]             = useState(0);
+  const [activeSlug,     setActiveSlug]     = useState<string | null>(null);
   const [previewUrl,     setPreviewUrl]     = useState<string | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getPerformances(locale as "ru" | "en", kind).then(setWorks);
-    setActiveYear(null); setPage(0); setPreviewVisible(false);
+    setActiveYear(null); setPage(0); setActiveSlug(null); setPreviewVisible(false);
   }, [locale, kind]);
 
-  const handleEnter = (url: string | null, x: number, y: number) => {
+  // Dismiss preview on outside click (mobile tap elsewhere)
+  useEffect(() => {
+    if (!activeSlug) return;
+    const dismiss = (e: MouseEvent) => {
+      if (!(e.target as Element).closest(".arc-row")) {
+        setActiveSlug(null); setPreviewVisible(false);
+      }
+    };
+    document.addEventListener("click", dismiss);
+    return () => document.removeEventListener("click", dismiss);
+  }, [activeSlug]);
+
+  const handleFirstClick = (slug: string, url: string | null, x: number, y: number) => {
     if (previewRef.current) {
       previewRef.current.style.left = `${x + 24}px`;
       previewRef.current.style.top  = `${y}px`;
     }
     setPreviewUrl(url);
+    setActiveSlug(slug);
     setPreviewVisible(true);
   };
-  const handleLeave = () => setPreviewVisible(false);
+  const handleSecondClick = (slug: string, basePath: string) => {
+    window.location.assign(`${basePath}/${slug}`);
+  };
+  const handleLeave = () => { setActiveSlug(null); setPreviewVisible(false); };
 
   const years   = [...new Set(works.map(w => w.year).filter((y): y is number => y != null))].sort((a, b) => b - a);
   const visible  = years.slice(page * YEAR_WIN, page * YEAR_WIN + YEAR_WIN);
@@ -277,8 +303,10 @@ export default function Works({ locale, kind = "performance" }: { locale: string
               <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Архив</p>
             )}
             {archive.map((w, i) => (
-              <ArchiveRow key={w.slug} w={w} basePath={basePath} index={i}
-                onEnter={handleEnter}
+              <ArchiveRow key={w.slug} w={w} index={i}
+                active={activeSlug === w.slug}
+                onFirstClick={(url, x, y) => handleFirstClick(w.slug, url, x, y)}
+                onSecondClick={() => handleSecondClick(w.slug, basePath)}
                 onLeave={handleLeave}
               />
             ))}
