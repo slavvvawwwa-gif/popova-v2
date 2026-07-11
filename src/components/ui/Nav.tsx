@@ -32,6 +32,26 @@ export default function Nav({ locale, setLocale }: { locale: string; setLocale: 
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
+  // Lock body scroll while mobile menu is open (prevents iOS rubber-band drift of the fixed overlay)
+  useEffect(() => {
+    if (!open) return;
+    const scrollY = window.scrollY;
+    const { style } = document.body;
+    style.position = "fixed";
+    style.top = `-${scrollY}px`;
+    style.left = "0";
+    style.right = "0";
+    style.overflow = "hidden";
+    return () => {
+      style.position = "";
+      style.top = "";
+      style.left = "";
+      style.right = "";
+      style.overflow = "";
+      window.scrollTo(0, scrollY);
+    };
+  }, [open]);
+
   return (
     <header style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
