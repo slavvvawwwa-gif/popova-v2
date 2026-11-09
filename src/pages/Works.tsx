@@ -1,19 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
-import { motion, AnimatePresence, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { getPerformances, type WorkCard } from "@/lib/data";
+import WorkMosaic from "@/components/WorkMosaic";
 import ScrambleText from "@/components/ui/ScrambleText";
 const YEAR_WIN = 5;
-
-const BENTO = [
-  { cols: 2, rows: 2 },
-  { cols: 1, rows: 2 },
-  { cols: 1, rows: 1 },
-  { cols: 1, rows: 1 },
-  { cols: 1, rows: 1 },
-];
-const bentoFor = (i: number) => BENTO[i % 5];
 
 /* ── Click preview: fixed at click position ── */
 function ClickPreview({ divRef, url, visible }: {
@@ -86,79 +77,11 @@ function ArchiveRow({ w, index, active, onFirstClick, onSecondClick, onLeave }: 
           <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: active ? "var(--accent)" : "var(--text-1)", lineHeight: 1.2, transition: "color 300ms", minWidth: 0, overflowWrap: "break-word", wordBreak: "break-word" }}>
             {w.title}
           </span>
-          <span className="arc-theatre" style={{ fontSize: "0.6rem", color: "var(--text-3)", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
+          <span className="arc-theatre" style={{ fontSize: "0.72rem", color: "var(--text-2)", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
             {w.theatre}
           </span>
         </div>
       </div>
-    </motion.div>
-  );
-}
-
-/* ── Current-repertoire card — bento grid with 3D tilt ── */
-function CurrentCard({ w, basePath, i }: { w: WorkCard; basePath: string; i: number }) {
-  const bento = bentoFor(i);
-  const ref   = useRef<HTMLDivElement>(null);
-  const rx    = useMotionValue(0);
-  const ry    = useMotionValue(0);
-  const srx   = useSpring(rx, { stiffness: 180, damping: 28 });
-  const sry   = useSpring(ry, { stiffness: 180, damping: 28 });
-
-  // Dynamic shadow
-  const shX  = useMotionValue(0);
-  const shY  = useMotionValue(0);
-  const sShX = useSpring(shX, { stiffness: 90, damping: 22 });
-  const sShY = useSpring(shY, { stiffness: 90, damping: 22 });
-  const cardShadow = useMotionTemplate`${sShX}px ${sShY}px 55px rgba(0,0,0,0.60), 0 0 0 1px rgba(245,240,229,0.05)`;
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 35 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.75, delay: (i % 5) * 0.07, ease: [0.16, 1, 0.3, 1] }}
-      onMouseMove={e => {
-        const r = ref.current!.getBoundingClientRect();
-        const cx = (e.clientX - r.left) / r.width  - 0.5;
-        const cy = (e.clientY - r.top)  / r.height - 0.5;
-        rx.set(cy * 10); ry.set(-cx * 10);
-        shX.set(-cx * 42); shY.set(-cy * 30);
-      }}
-      onMouseLeave={() => { rx.set(0); ry.set(0); shX.set(0); shY.set(0); }}
-      style={{ perspective: 900, gridColumn: `span ${bento.cols}`, gridRow: `span ${bento.rows}`, boxShadow: cardShadow }}
-    >
-      <motion.div style={{ rotateX: srx, rotateY: sry, width: "100%", height: "100%" }}>
-        <Link
-          to={`${basePath}/${w.slug}`}
-          style={{ display: "block", textDecoration: "none", position: "relative", overflow: "hidden", width: "100%", height: "100%", background: "var(--surface)" }}
-          className="cur-card"
-        >
-          {w.coverUrl && (
-            <img src={w.coverUrl} alt={w.title}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 750ms var(--ease-expo)" }}
-              className="cur-img"
-            />
-          )}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, transparent 35%, rgba(7,5,10,0.97) 100%)" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "1.4rem 1.6rem" }}>
-            <p className="eyebrow" style={{ marginBottom: "0.45rem", color: "var(--accent)", opacity: 0.6 }}>
-              {w.theatre} · {w.year}
-            </p>
-            <h2 style={{ fontFamily: "var(--serif)", fontSize: "clamp(1rem,2vw,1.5rem)", fontWeight: 300, color: "var(--text-1)", lineHeight: 1.2, overflowWrap: "break-word", wordBreak: "break-word" }}>
-              {w.title}
-            </h2>
-            {w.shortDescription && (
-              <p style={{ fontSize: "0.7rem", color: "var(--text-2)", lineHeight: 1.6, marginTop: "0.4rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                {w.shortDescription}
-              </p>
-            )}
-          </div>
-          <div className="cur-corner" style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "2px solid var(--accent)", borderLeft: "2px solid var(--accent)", transition: "width 380ms var(--ease-soft), height 380ms var(--ease-soft)" }} />
-          {/* Soft sheen sweep on hover */}
-          <div className="card-sheen" />
-        </Link>
-      </motion.div>
     </motion.div>
   );
 }
@@ -276,23 +199,13 @@ export default function Works({ locale, kind = "performance" }: { locale: string
           style={{ height: 1, background: "rgba(245,240,229,0.07)", marginBottom: "2rem", transformOrigin: "left" }}
         />
 
-        {/* Current — bento grid */}
+        {/* Current repertoire, in chronological reading order */}
         {current.length > 0 && (
           <section style={{ marginBottom: "3rem" }}>
             {kind === "performance" && (
-              <p className="eyebrow works-labels" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Текущий репертуар</p>
+              <p className="eyebrow works-labels" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.9 }}>Текущий репертуар</p>
             )}
-            <div
-              className="works-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gridAutoRows: "min(280px, 22vw)",
-                gap: 3,
-              }}
-            >
-              {current.map((w, i) => <CurrentCard key={w.slug} w={w} basePath={basePath} i={i} />)}
-            </div>
+            <WorkMosaic works={current} />
           </section>
         )}
 
@@ -300,7 +213,7 @@ export default function Works({ locale, kind = "performance" }: { locale: string
         {archive.length > 0 && (
           <section className="works-archive">
             {current.length > 0 && (
-              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Архив</p>
+              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.9 }}>Архив</p>
             )}
             {archive.map((w, i) => (
               <ArchiveRow key={w.slug} w={w} index={i}
@@ -315,21 +228,14 @@ export default function Works({ locale, kind = "performance" }: { locale: string
       </div>
 
       <style>{`
-        .cur-img { transition: transform 750ms var(--ease-expo); }
-        .cur-card:hover .cur-img { transform: scale(1.06); }
-        .cur-card:hover .cur-corner { width: 28px !important; height: 28px !important; }
-        .card-sheen { position:absolute;top:0;bottom:0;left:0;width:60%;z-index:5;pointer-events:none;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.07) 50%,transparent 100%);transform:translateX(-120%) skewX(-12deg); }
-        .cur-card:hover .card-sheen { transform:translateX(220%) skewX(-12deg);transition:transform 0.85s cubic-bezier(0.16,1,0.3,1); }
         @media(max-width:699px) {
-          .works-grid { grid-template-columns: 1fr !important; grid-auto-rows: 66vw !important; gap: 0 !important; }
-          .works-grid > * { grid-column: span 1 !important; grid-row: span 1 !important; }
           .works-outer { padding-left: 0 !important; padding-right: 0 !important; }
           .works-header { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
           .works-sep { margin-left: 1.25rem !important; margin-right: 1.25rem !important; }
           .works-labels { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
           .works-archive { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
           .arc-inner { grid-template-columns: 3.5rem 1fr !important; gap: 1rem !important; }
-          .arc-theatre { display: none !important; }
+          .arc-theatre { grid-column: 2; line-height: 1.6; }
         }
       `}</style>
     </>

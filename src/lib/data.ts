@@ -13,7 +13,7 @@ function asArr<T>(v: unknown): T[] { return Array.isArray(v) ? (v as T[]) : []; 
 export interface WorkCard {
   slug: string; title: string; theatre: string; year: number|null;
   genre: string; status: string; featured: boolean; kind: string;
-  coverUrl: string|null; previewUrl: string|null; shortDescription: string; premiere: string;
+  coverAspectRatio: number; coverUrl: string|null; previewUrl: string|null; shortDescription: string; premiere: string;
 }
 
 export interface GalleryImg { url: string|null; alt: string; caption: string; }
@@ -26,6 +26,10 @@ const CARD = `"slug":slug.current,title_ru,title_en,theatre,theatre_en,year,prem
 
 function mapCard(r: Record<string,unknown>, locale: Locale): WorkCard {
   const tags = (r.tags as string[]|undefined) ?? [];
+  // Use the original asset, without CMS crop/hotspot, for complete covers.
+  const cover = r.cover_image as { asset?: { _ref?: string } } | undefined;
+  const dimensions = cover?.asset?._ref?.match(/-(\d+)x(\d+)-[^-]+$/);
+  const coverAspectRatio = dimensions ? Number(dimensions[1]) / Number(dimensions[2]) : 1.5;
   return {
     slug: (r.slug as string) ?? "",
     title: pick(r, "title", locale),
@@ -37,7 +41,8 @@ function mapCard(r: Record<string,unknown>, locale: Locale): WorkCard {
     kind: (r.kind as string) ?? "performance",
     premiere: (r.premiere as string) ?? "",
     shortDescription: pick(r, "short_description", locale),
-    coverUrl: urlFor(r.cover_image)?.width(1400).quality(88).url() ?? null,
+    coverAspectRatio,
+    coverUrl: urlFor(cover?.asset || r.cover_image)?.width(1400).quality(88).url() ?? null,
     previewUrl: urlFor(r.preview_image || r.cover_image)?.width(900).quality(85).url() ?? null,
   };
 }
@@ -50,17 +55,18 @@ function mapGallery(arr: unknown, locale: Locale): GalleryImg[] {
   }));
 }
 
-// Issue #2: sort featured by year desc
+// Premiere first; year is the fallback when the premiere date is unknown.
+const CHRONOLOGY = `coalesce(premiere, string(year) + "-01-01") desc, year desc, title_ru asc, _id asc`;
 export async function getFeatured(locale: Locale = "ru"): Promise<WorkCard[]> {
   const rows = await client.fetch<Record<string,unknown>[]>(
-    `*[_type=="performance"&&featured==true&&!defined(parent)]|order(year desc, _createdAt desc){${CARD}}`
+    `*[_type=="performance"&&featured==true&&!defined(parent)]|order(${CHRONOLOGY}){${CARD}}`
   );
   return rows.map(r => mapCard(r, locale));
 }
 
 export async function getPerformances(locale: Locale = "ru", kind = "performance"): Promise<WorkCard[]> {
   const rows = await client.fetch<Record<string,unknown>[]>(
-    `*[_type=="performance"&&kind==$kind&&!defined(parent)]|order(year desc){${CARD}}`,
+    `*[_type=="performance"&&kind==$kind&&!defined(parent)]|order(${CHRONOLOGY}){${CARD}}`,
     { kind }
   );
   return rows.map(r => mapCard(r, locale));

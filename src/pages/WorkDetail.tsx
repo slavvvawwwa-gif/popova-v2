@@ -24,7 +24,7 @@ function BentoGallery({ images, label, onOpen }: {
   return (
     <div style={{ padding: "3rem clamp(1.5rem,3vw,2.5rem) 0" }}>
       {label && (
-        <p className="eyebrow" style={{ marginBottom: "1.5rem", color: "var(--accent)", opacity: 0.6 }}>{label}</p>
+        <p className="eyebrow" style={{ marginBottom: "1.5rem", color: "var(--accent)", opacity: 0.9 }}>{label}</p>
       )}
       <div
         style={{
@@ -84,12 +84,12 @@ export default function WorkDetail({ locale, basePath = "/works" }: { locale: st
 
   if (error) return (
     <div style={{ height: "100svh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.5 }}>Не найдено</span>
+      <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.9 }}>Не найдено</span>
     </div>
   );
   if (!work) return (
     <div style={{ height: "100svh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.5 }}>Загрузка…</span>
+      <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.9 }}>Загрузка…</span>
     </div>
   );
 
@@ -133,7 +133,7 @@ export default function WorkDetail({ locale, basePath = "/works" }: { locale: st
           transition={{ duration: 0.9, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "clamp(2rem,5vw,4.5rem)" }}
         >
-          <p className="eyebrow" style={{ marginBottom: "1rem", color: "var(--accent)", opacity: 0.65 }}>
+          <p className="eyebrow" style={{ marginBottom: "1rem", color: "var(--accent)", opacity: 0.9 }}>
             {work.theatre}{work.year ? ` · ${work.year}` : ""}
           </p>
           <h1 style={{ fontFamily: "var(--serif)", fontSize: "clamp(2rem,5.5vw,5.5rem)", fontWeight: 300, lineHeight: 1, color: "var(--text-1)", letterSpacing: "-0.02em", overflowWrap: "break-word" }}>
@@ -170,12 +170,12 @@ export default function WorkDetail({ locale, basePath = "/works" }: { locale: st
 
           {work.children.length > 0 && (
             <div style={{ marginTop: "3rem", paddingTop: "3rem", borderTop: "1px solid rgba(245,240,229,0.06)" }}>
-              <p className="eyebrow" style={{ marginBottom: "1.5rem", color: "var(--accent)", opacity: 0.55 }}>Выпуски</p>
+              <p className="eyebrow" style={{ marginBottom: "1.5rem", color: "var(--accent)", opacity: 0.9 }}>Выпуски</p>
               {work.children.map(c => (
                 <Link key={c.slug} to={`${basePath}/${c.slug}`}
-                  style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "0.9rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)", textDecoration: "none", opacity: 0.55, transition: "opacity 200ms" }}
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "0.9rem 0", borderBottom: "1px solid rgba(245,240,229,0.04)", textDecoration: "none", opacity: 0.85, transition: "opacity 200ms" }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = "1"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = "0.55"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = "0.85"}
                 >
                   <span style={{ fontFamily: "var(--serif)", fontSize: "1.15rem", color: "var(--text-1)", fontWeight: 300 }}>{c.title}</span>
                   <span style={{ fontSize: "0.68rem", color: "var(--text-3)", letterSpacing: "0.06em" }}>{c.year}</span>
@@ -194,7 +194,7 @@ export default function WorkDetail({ locale, basePath = "/works" }: { locale: st
             <div style={{ width: 1, height: 36, background: "var(--accent)", opacity: 0.4, marginBottom: "2rem" }} />
             {credits.map(([label, val]) => (
               <div key={label} style={{ marginBottom: "1.75rem" }}>
-                <p className="eyebrow" style={{ marginBottom: "0.35rem", color: "var(--accent)", opacity: 0.5 }}>{label}</p>
+                <p className="eyebrow" style={{ marginBottom: "0.35rem", color: "var(--accent)", opacity: 0.9 }}>{label}</p>
                 <p style={{ color: "var(--text-1)", fontSize: "0.9rem", lineHeight: 1.65, fontFamily: "var(--serif)", fontWeight: 300 }}>{val}</p>
               </div>
             ))}

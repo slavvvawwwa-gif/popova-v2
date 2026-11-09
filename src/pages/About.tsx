@@ -99,7 +99,7 @@ export default function About({ locale }: { locale: string }) {
 
   if (!bio) return (
     <div style={{ height: "100svh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.5 }}>Загрузка…</span>
+      <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.9 }}>Загрузка…</span>
     </div>
   );
 
@@ -136,13 +136,13 @@ export default function About({ locale }: { locale: string }) {
 
         <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}>
           <div style={{ width: 1, height: 36, background: "var(--accent)", opacity: 0.45, marginBottom: "1.2rem" }} />
-          <p className="eyebrow" style={{ marginBottom: "0.9rem", color: "var(--accent)", opacity: 0.5 }}>Биография</p>
+          <p className="eyebrow" style={{ marginBottom: "0.9rem", color: "var(--accent)", opacity: 0.9 }}>Биография</p>
           <h1 style={{ fontFamily: "var(--serif)", fontSize: "clamp(2.2rem,5vw,4.5rem)", fontWeight: 300, lineHeight: 0.92, letterSpacing: "-0.02em", marginBottom: "1.2rem" }}>
             {bio.name.split(" ")[0]}<br/>
             <em style={{ color: "var(--text-2)" }}>{bio.name.split(" ").slice(1).join(" ")}</em>
           </h1>
           {bio.role && (
-            <p className="eyebrow" style={{ color: "var(--accent)", opacity: 0.55, marginBottom: "1.6rem" }}>{bio.role}</p>
+            <p className="eyebrow" style={{ color: "var(--accent)", opacity: 0.9, marginBottom: "1.6rem" }}>{bio.role}</p>
           )}
           <div style={{ color: "var(--text-2)", lineHeight: 1.82, fontSize: "0.9375rem" }}>
             {bio.text ? <PortableText value={bio.text as Parameters<typeof PortableText>[0]["value"]} /> : null}
@@ -155,13 +155,13 @@ export default function About({ locale }: { locale: string }) {
         <div className="about-mid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3.5rem", marginBottom: "3.5rem" }}>
           {bio.festivals.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.65 }}>
-              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Участие в других фестивалях, проектах, лабораториях</p>
+              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.9 }}>Участие в других фестивалях, проектах, лабораториях</p>
               <BioList items={bio.festivals} />
             </motion.div>
           )}
           {bio.education.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.65, delay: 0.08 }}>
-              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.5 }}>Дополнительное образование</p>
+              <p className="eyebrow" style={{ marginBottom: "1.2rem", color: "var(--accent)", opacity: 0.9 }}>Дополнительное образование</p>
               <BioList items={bio.education} />
             </motion.div>
           )}
@@ -176,7 +176,7 @@ export default function About({ locale }: { locale: string }) {
           style={{ maxWidth: 680, margin: "0 auto" }}
         >
           <div style={{ height: 1, background: "rgba(245,240,229,0.06)", marginBottom: "2.5rem" }} />
-          <p className="eyebrow" style={{ marginBottom: "1.8rem", color: "var(--accent)", opacity: 0.5, textAlign: "center" }}>
+          <p className="eyebrow" style={{ marginBottom: "1.8rem", color: "var(--accent)", opacity: 0.9, textAlign: "center" }}>
             Благодарственные письма
           </p>
           {bio.thankYouLetters.map((l, i) => (

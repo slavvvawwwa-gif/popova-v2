@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, useMotionValue, useSpring, useScroll, useTransform, useMotionTemplate } from "framer-motion";
+import { motion, useMotionValue, useSpring, useScroll, useTransform } from "framer-motion";
 import { getFeatured, getHome, type WorkCard, type HomeData } from "@/lib/data";
 import CharReveal from "@/components/ui/CharReveal";
 import ScrambleText from "@/components/ui/ScrambleText";
+import WorkMosaic from "@/components/WorkMosaic";
 import CSSHeroFrames from "@/components/CSSHeroFrames";
 /* ── Liquid-fill letter (В / П): fills gold from bottom on hover ── */
 function LiquidLetter({
@@ -34,99 +35,6 @@ function LiquidLetter({
     >
       {char}
     </motion.span>
-  );
-}
-
-/* ── Bento card sizes for featured grid ── */
-const BENTO = [
-  { cols: 2, rows: 2 },
-  { cols: 1, rows: 2 },
-  { cols: 1, rows: 1 },
-  { cols: 1, rows: 1 },
-  { cols: 1, rows: 1 },
-];
-const bentoFor = (i: number) => BENTO[i % 5];
-
-function FeaturedCard({ w, i }: { w: WorkCard; i: number }) {
-  const path  = w.kind === "project" ? "/projects" : w.kind === "lab" ? "/lab" : "/works";
-  const bento = bentoFor(i);
-  const ref   = useRef<HTMLDivElement>(null);
-  const rx    = useMotionValue(0);
-  const ry    = useMotionValue(0);
-  const srx   = useSpring(rx, { stiffness: 180, damping: 28 });
-  const sry   = useSpring(ry, { stiffness: 180, damping: 28 });
-
-  // Dynamic shadow — shifts opposite to cursor (light-source illusion)
-  const shX  = useMotionValue(0);
-  const shY  = useMotionValue(0);
-  const sShX = useSpring(shX, { stiffness: 90, damping: 22 });
-  const sShY = useSpring(shY, { stiffness: 90, damping: 22 });
-  const cardShadow = useMotionTemplate`${sShX}px ${sShY}px 55px rgba(0,0,0,0.60), 0 0 0 1px rgba(245,240,229,0.05)`;
-
-  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const r = ref.current!.getBoundingClientRect();
-    const cx = (e.clientX - r.left) / r.width  - 0.5;
-    const cy = (e.clientY - r.top)  / r.height - 0.5;
-    rx.set(cy * 12); ry.set(-cx * 12);
-    shX.set(-cx * 42); shY.set(-cy * 30);
-  };
-  const onLeave = () => {
-    rx.set(0); ry.set(0);
-    shX.set(0); shY.set(0);
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.8, delay: (i % 5) * 0.08, ease: [0.16, 1, 0.3, 1] }}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
-      style={{
-        perspective: 900,
-        gridColumn: `span ${bento.cols}`,
-        gridRow:    `span ${bento.rows}`,
-        boxShadow: cardShadow,
-      }}
-    >
-      <motion.div style={{ rotateX: srx, rotateY: sry, width: "100%", height: "100%" }}>
-        <Link
-          to={`${path}/${w.slug}`}
-          style={{ display: "block", textDecoration: "none", position: "relative", overflow: "hidden", width: "100%", height: "100%", background: "var(--surface)" }}
-          className="feat-link"
-        >
-          {w.coverUrl && (
-            <img
-              src={w.coverUrl} alt={w.title}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-              className="feat-img"
-            />
-          )}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, transparent 30%, rgba(7,5,10,0.97) 100%)" }}/>
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "1.5rem 1.75rem" }}>
-            <p className="eyebrow" style={{ marginBottom: "0.6rem", color: "var(--accent)", opacity: 0.65 }}>
-              {w.theatre} · {w.year}
-            </p>
-            <h2 style={{ fontFamily: "var(--serif)", fontSize: "clamp(1rem,2.4vw,1.9rem)", fontWeight: 300, lineHeight: 1.05, color: "var(--text-1)", letterSpacing: "-0.01em" }}>
-              {w.title}
-            </h2>
-            {w.shortDescription && (
-              <p style={{ fontSize: "0.72rem", color: "var(--text-2)", lineHeight: 1.6, marginTop: "0.5rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                {w.shortDescription}
-              </p>
-            )}
-          </div>
-          {/* Gold corner */}
-          <div style={{ position: "absolute", top: 0, left: 0, width: 0, height: 0, borderTop: "2px solid var(--accent)", borderLeft: "2px solid var(--accent)", transition: "width 380ms var(--ease-soft), height 380ms var(--ease-soft)" }} className="feat-corner"/>
-          {/* Arrow */}
-          <div style={{ position: "absolute", top: "1.2rem", right: "1.2rem", opacity: 0, transition: "opacity 300ms", fontSize: "0.9rem", color: "var(--accent)" }} className="feat-arrow">↗</div>
-          {/* Soft sheen sweep on hover */}
-          <div className="card-sheen" />
-        </Link>
-      </motion.div>
-    </motion.div>
   );
 }
 
@@ -277,21 +185,11 @@ export default function Home({ locale }: { locale: string }) {
             style={{ display: "flex", alignItems: "center", gap: "2rem", marginBottom: "2.5rem" }}
           >
             <div style={{ width: 1, height: 40, background: "var(--accent)", opacity: 0.55 }}/>
-            <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.65 }}><ScrambleText text="Избранное" /></span>
+            <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.9 }}><ScrambleText text="Избранное" /></span>
             <div style={{ flex: 1, height: 1, background: "rgba(245,240,229,0.05)" }}/>
           </motion.div>
 
-          <div
-            className="feat-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gridAutoRows: "min(280px, 22vw)",
-              gap: 3,
-            }}
-          >
-            {featured.map((w, i) => <FeaturedCard key={w.slug} w={w} i={i} />)}
-          </div>
+          <WorkMosaic works={featured} />
 
           <motion.div
             className="feat-more"
@@ -313,18 +211,10 @@ export default function Home({ locale }: { locale: string }) {
       )}
 
       <style>{`
-        .feat-img { transition: transform 900ms var(--ease-expo); position: absolute; inset: 0; }
-        .feat-link:hover .feat-img { transform: scale(1.07); }
-        .feat-link:hover .feat-corner { width: 32px !important; height: 32px !important; }
-        .feat-link:hover .feat-arrow { opacity: 1 !important; }
-        .card-sheen { position:absolute;top:0;bottom:0;left:0;width:60%;z-index:5;pointer-events:none;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.07) 50%,transparent 100%);transform:translateX(-120%) skewX(-12deg); }
-        .feat-link:hover .card-sheen,.cur-card:hover .card-sheen { transform:translateX(220%) skewX(-12deg);transition:transform 0.85s cubic-bezier(0.16,1,0.3,1); }
         @media(max-width:699px) {
           .feat-section { padding-left: 0 !important; padding-right: 0 !important; }
           .feat-header  { padding-left: 1.25rem !important; padding-right: 1.25rem !important; }
           .feat-more    { padding-right: 1.25rem !important; }
-          .feat-grid { grid-template-columns: 1fr !important; grid-auto-rows: 68vw !important; gap: 0 !important; }
-          .feat-grid > * { grid-column: span 1 !important; grid-row: span 1 !important; }
         }
       `}</style>
     </>

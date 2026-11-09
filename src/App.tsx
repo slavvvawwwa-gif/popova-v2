@@ -37,8 +37,8 @@ function applyTheme(hue: number) {
   root.style.setProperty("--accent-2", `hsl(${hue + 22},50%,40%)`);
   const tw = Math.round(hue * 0.08 + 26);
   root.style.setProperty("--text-1",   `hsl(${tw},38%,94%)`);
-  root.style.setProperty("--text-2",   `hsla(${tw},28%,90%,0.50)`);
-  root.style.setProperty("--text-3",   `hsla(${tw},20%,86%,0.22)`);
+  root.style.setProperty("--text-2",   `hsla(${tw},28%,90%,0.82)`);
+  root.style.setProperty("--text-3",   `hsla(${tw},20%,86%,0.68)`);
 }
 
 const pageVariants = {
