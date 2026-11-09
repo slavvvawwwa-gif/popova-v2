@@ -80,7 +80,7 @@ function AnimatedRoutes({ locale }: { locale: string }) {
 }
 
 function AppInner() {
-  const [locale, setLocale] = useState("ru");
+  const locale = "ru";
   const [hue, setHue] = useState(() => {
     const stored = localStorage.getItem("siteHue");
     const h = stored ? Number(stored) : 45;
@@ -100,7 +100,6 @@ function AppInner() {
     });
   }, []);
 
-  const handleLocale = (l: string) => { setLocale(l); i18n.changeLanguage(l); };
 
   return (
     <div style={{ minHeight: "100svh" }}>
@@ -119,7 +118,7 @@ function AppInner() {
       <div id="cursor" />
       <div id="cursor-ring" />
 
-      <Nav locale={locale} setLocale={handleLocale} />
+      <Nav />
 
       <main style={{ position: "relative", zIndex: 1 }}>
         <Suspense fallback={null}>

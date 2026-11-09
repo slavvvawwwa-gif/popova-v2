@@ -11,7 +11,7 @@ const links = [
   { to: "/contacts", key: "contacts" },
 ];
 
-export default function Nav({ locale, setLocale }: { locale: string; setLocale: (l: string) => void }) {
+export default function Nav() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
@@ -86,14 +86,6 @@ export default function Nav({ locale, setLocale }: { locale: string; setLocale: 
               )}
             </Link>
           ))}
-          <button
-            onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
-            style={{ background: "none", border: "1px solid rgba(245,240,229,0.14)", color: "var(--text-3)", fontSize: "0.52rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.3rem 0.6rem", cursor: "pointer", transition: "all 250ms" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--accent)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-3)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(245,240,229,0.14)"; }}
-          >
-            {locale === "ru" ? "EN" : "RU"}
-          </button>
         </nav>
       )}
 
@@ -146,12 +138,6 @@ export default function Nav({ locale, setLocale }: { locale: string; setLocale: 
                 </Link>
               </motion.div>
             ))}
-            <button
-              onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
-              style={{ marginTop: "2rem", background: "none", border: "1px solid rgba(245,240,229,0.15)", color: "var(--text-3)", fontSize: "0.55rem", letterSpacing: "0.18em", textTransform: "uppercase", padding: "0.4rem 0.8rem", cursor: "pointer" }}
-            >
-              {locale === "ru" ? "EN" : "RU"}
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
