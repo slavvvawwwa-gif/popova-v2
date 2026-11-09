@@ -49,6 +49,8 @@ function ArchiveRow({ w, index, active, onFirstClick, onSecondClick, onLeave }: 
   onSecondClick: () => void;
   onLeave: () => void;
 }) {
+  const locationWords = w.theatre.match(/^(\s*\S+)([\s\S]*)$/);
+
   const handleClick = (e: React.MouseEvent) => {
     if (active) {
       onSecondClick();
@@ -77,8 +79,8 @@ function ArchiveRow({ w, index, active, onFirstClick, onSecondClick, onLeave }: 
           <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: active ? "var(--accent)" : "var(--text-1)", lineHeight: 1.2, transition: "color 300ms", minWidth: 0, overflowWrap: "break-word", wordBreak: "break-word" }}>
             {w.title}
           </span>
-          <span className="arc-theatre" style={{ fontSize: "0.72rem", color: "var(--text-2)", lineHeight: 1.6, overflowWrap: "anywhere", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
-            {w.theatre}
+          <span className="arc-theatre" style={{ fontSize: "0.72rem", color: "var(--location-text)", lineHeight: 1.6, overflowWrap: "anywhere", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
+            {locationWords ? <><span className="arc-theatre-first">{locationWords[1]}</span>{locationWords[2]}</> : w.theatre}
           </span>
         </div>
       </div>

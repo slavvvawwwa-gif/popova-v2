@@ -9,6 +9,8 @@
   --text-1:   #f5f0e5;     /* warm white */
   --text-2:   rgba(245,240,229,0.82);
   --text-3:   rgba(245,240,229,0.68);
+  --location-text: color-mix(in srgb, var(--text-1) 64%, transparent);
+  --location-accent: hsl(46, 68%, 68%);
   --serif:    "Cormorant Garamond", Georgia, serif;
   --sans:     "Inter", system-ui, sans-serif;
   --ease-expo: cubic-bezier(0.16,1,0.3,1);
@@ -155,3 +157,5 @@ canvas { transform: translateZ(0); }
 @media (max-width: 699px) {
   .home-hero { height: calc(100svh - 160px); min-height: 460px; }
 }
+
+.arc-theatre-first { color: var(--location-accent); }

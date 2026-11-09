@@ -34,6 +34,7 @@ function applyTheme(hue: number) {
   root.style.setProperty("--bg",       s("3.5%",  "28%"));
   root.style.setProperty("--surface",  s("5.5%",  "18%"));
   root.style.setProperty("--accent",   s("52%",   "68%"));
+  root.style.setProperty("--location-accent", `hsl(${hue},68%,68%)`);
   root.style.setProperty("--accent-2", `hsl(${hue + 22},50%,40%)`);
   const tw = Math.round(hue * 0.08 + 26);
   root.style.setProperty("--text-1",   `hsl(${tw},38%,94%)`);
