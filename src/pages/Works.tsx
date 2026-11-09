@@ -70,14 +70,14 @@ function ArchiveRow({ w, index, active, onFirstClick, onSecondClick, onLeave }: 
         onClick={handleClick}
         onMouseLeave={onLeave}
       >
-        <div className="arc-inner" style={{ display: "grid", gridTemplateColumns: "4.5rem 1fr max-content", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: `1px solid ${active ? "rgba(212,175,55,0.15)" : "rgba(245,240,229,0.04)"}` }}>
+        <div className="arc-inner" style={{ display: "grid", gridTemplateColumns: "4.5rem minmax(0, 1.4fr) minmax(0, 1fr)", gap: "2rem", alignItems: "baseline", padding: "0.9rem 0", borderBottom: `1px solid ${active ? "rgba(212,175,55,0.15)" : "rgba(245,240,229,0.04)"}` }}>
           <span style={{ fontFamily: "var(--serif)", fontSize: "0.82rem", color: "var(--text-3)", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
             {w.year}
           </span>
           <span className="arc-title" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.05rem,2vw,1.5rem)", fontWeight: 300, color: active ? "var(--accent)" : "var(--text-1)", lineHeight: 1.2, transition: "color 300ms", minWidth: 0, overflowWrap: "break-word", wordBreak: "break-word" }}>
             {w.title}
           </span>
-          <span className="arc-theatre" style={{ fontSize: "0.72rem", color: "var(--text-2)", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
+          <span className="arc-theatre" style={{ fontSize: "0.72rem", color: "var(--text-2)", lineHeight: 1.6, overflowWrap: "anywhere", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>
             {w.theatre}
           </span>
         </div>
