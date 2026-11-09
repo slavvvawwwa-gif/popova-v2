@@ -63,7 +63,7 @@ export default function Nav({ locale, setLocale }: { locale: string; setLocale: 
       borderBottom:   scrolled ? "1px solid rgba(245,240,229,0.04)" : "none",
     }}>
       <Link to="/" style={{ textDecoration: "none", fontFamily: "var(--serif)", fontSize: "1.05rem", fontWeight: 300, color: "var(--text-1)", letterSpacing: "0.05em" }}>
-        Варвара Попова
+        Варвара Байбикова
       </Link>
 
       {/* Desktop nav */}

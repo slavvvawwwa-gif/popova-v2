@@ -209,7 +209,7 @@ export async function getHome(locale: Locale = "ru"): Promise<HomeData> {
   );
   return {
     label:   pick(r ?? {}, "hero_label",   locale) || "Театральный режиссёр",
-    name:    pick(r ?? {}, "hero_name",    locale) || "Варвара Попова",
+    name:    pick(r ?? {}, "hero_name",    locale) || "Варвара Байбикова",
     tagline: pick(r ?? {}, "hero_tagline", locale) || "",
   };
 }

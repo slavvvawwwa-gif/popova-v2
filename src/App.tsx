@@ -133,7 +133,7 @@ function AppInner() {
         display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem",
       }}>
         <span style={{ color: "var(--text-3)", fontSize: "0.6rem", letterSpacing: "0.12em", fontFamily: "var(--serif)", fontStyle: "italic" }}>
-          Варвара Попова
+          Варвара Байбикова
         </span>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <div style={{ width: 1, height: 12, background: "var(--accent)", opacity: 0.35 }} />
