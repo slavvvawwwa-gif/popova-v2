@@ -109,7 +109,7 @@ function AppInner() {
       </div>
 
       {/* Fixed bottom-of-viewport gradient — fades shader into bg on scroll */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "28vh", background: "linear-gradient(to bottom, transparent, var(--bg))", pointerEvents: "none", zIndex: 2 }} />
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "28vh", background: "linear-gradient(to bottom, transparent, var(--bg))", pointerEvents: "none", zIndex: 0 }} />
 
       {/* Film grain */}
       <Grain />

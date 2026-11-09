@@ -68,9 +68,10 @@ export default function Home({ locale }: { locale: string }) {
     <>
       {/* ── Hero ── */}
       <section
+        className="home-hero"
         ref={heroRef}
         onMouseMove={onMouseMove}
-        style={{ position: "relative", height: "100svh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" }}
+        style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" }}
       >
         <CSSHeroFrames />
 
@@ -146,21 +147,6 @@ export default function Home({ locale }: { locale: string }) {
           </motion.div>
         </motion.div>
 
-        {/* Scroll indicator — stays at bottom, outside parallax */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.2 }}
-          style={{ position: "absolute", bottom: "2.5rem", left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, zIndex: 2 }}
-        >
-          <span className="eyebrow" style={{ fontSize: "0.48rem", color: "var(--text-3)" }}>scroll</span>
-          <motion.div
-            animate={{ scaleY: [1, 0.3, 1], opacity: [0.6, 1, 0.6] }}
-            transition={{ repeat: Infinity, duration: 2.0, ease: "easeInOut" }}
-            style={{ width: 1, height: 40, background: "linear-gradient(to bottom, var(--accent), transparent)", transformOrigin: "top" }}
-          />
-        </motion.div>
-
         {/* Decorative year */}
         <motion.span
           initial={{ opacity: 0 }}
@@ -175,17 +161,17 @@ export default function Home({ locale }: { locale: string }) {
 
       {/* ── Featured works ── */}
       {featured.length > 0 && (
-        <section className="feat-section" style={{ padding: "4rem clamp(1.5rem,3vw,2.5rem) 5rem", maxWidth: 1600, margin: "0 auto", width: "100%" }}>
+        <section id="featured" tabIndex={-1} aria-label={locale === "en" ? "Selected works" : "Избранные работы"} className="feat-section" style={{ padding: "1rem clamp(1.5rem,3vw,2.5rem) 5rem", maxWidth: 1600, margin: "0 auto", width: "100%" }}>
           <motion.div
             className="feat-header"
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            style={{ display: "flex", alignItems: "center", gap: "2rem", marginBottom: "2.5rem" }}
+            style={{ display: "flex", alignItems: "center", gap: "2rem", marginBottom: "1rem" }}
           >
             <div style={{ width: 1, height: 40, background: "var(--accent)", opacity: 0.55 }}/>
-            <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.9 }}><ScrambleText text="Избранное" /></span>
+            <span className="eyebrow" style={{ color: "var(--accent)", opacity: 0.9 }}><ScrambleText text="Избранное" /> <span aria-hidden="true" style={{ marginLeft: "0.7rem", fontSize: "1rem" }}>↓</span></span>
             <div style={{ flex: 1, height: 1, background: "rgba(245,240,229,0.05)" }}/>
           </motion.div>
 

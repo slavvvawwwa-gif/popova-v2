@@ -142,3 +142,16 @@ canvas { transform: translateZ(0); }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   text-shadow: 0 1px 3px #07050a;
 }
+
+.home-hero { height: calc(100svh - 180px); min-height: 500px; }
+#featured { scroll-margin-top: 80px; }
+#featured:focus { outline: none; }
+.mosaic-card { container-type: inline-size; }
+@container (max-width: 300px) {
+  .mosaic-description { display: none; }
+  .mosaic-caption { padding: 1rem; padding-top: 3rem; }
+  .mosaic-caption h2 { font-size: 1.15rem; }
+}
+@media (max-width: 699px) {
+  .home-hero { height: calc(100svh - 160px); min-height: 460px; }
+}

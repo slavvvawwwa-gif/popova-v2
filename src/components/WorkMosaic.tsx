@@ -12,13 +12,19 @@ const getColumns = () => window.innerWidth >= 1100 ? 3 : window.innerWidth >= 70
 export default function WorkMosaic({ works }: { works: WorkCard[] }) {
   const columns = useSyncExternalStore(subscribeToColumns, getColumns, () => 3);
   const rows: WorkCard[][] = [];
-  // Balance a short final row, without changing the reading order.
-  const rowCount = Math.ceil(works.length / columns);
+  // Alternating row sizes create large and small photos without cropping or reordering.
   let offset = 0;
-  for (let row = 0; row < rowCount; row++) {
-    const count = Math.ceil((works.length - offset) / (rowCount - row));
+  let rowIndex = 0;
+  while (offset < works.length) {
+    const preferred = columns === 3 ? (rowIndex % 2 === 0 ? 2 : 3)
+      : columns === 2 ? (rowIndex % 2 === 0 ? 1 : 2) : 1;
+    const remaining = works.length - offset;
+    let count = Math.min(preferred, remaining);
+    // Absorb a lone final photo on desktop rather than stretching it to full width.
+    if (columns === 3 && remaining - count === 1) count++;
     rows.push(works.slice(offset, offset + count));
     offset += count;
+    rowIndex++;
   }
 
   return (
